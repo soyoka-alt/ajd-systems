@@ -660,15 +660,10 @@ function renderDays(){
     d.innerHTML=`<div class="day-hd"><div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:11px;font-weight:700;letter-spacing:.05em">DAY ${di+1}</span>
       <input type="date" value="${day.date||''}" style="width:110px" onchange="ud(${di},'date',this.value)">
-      <input type="text" value="${esc(day.title||'')}" placeholder="Title / 标题" style="width:150px" oninput="ud(${di},'title',this.value)">
+      <input type="text" value="${esc(day.title||'')}" placeholder="标题" style="width:150px" oninput="ud(${di},'title',this.value)">
     </div><button class="xb" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff" onclick="rmDay(${di})">×</button></div>
     <div class="day-body">
-      <div class="srh"><span></span>
-        <span class="t-en">Time</span><span class="t-zh">时间</span><span class="t-ja">時間</span>
-        <span class="t-en">Type</span><span class="t-zh">类型</span><span class="t-ja">種類</span>
-        <span class="t-en">Content / Location</span><span class="t-zh">景点/内容</span><span class="t-ja">内容/場所</span>
-        <span class="t-en">Note</span><span class="t-zh">备注</span><span class="t-ja">備考</span>
-        <span></span></div>
+      <div class="srh"><span></span><span>时间</span><span>类型</span><span>景点/内容</span><span>备注</span><span></span></div>
       ${day.slots.map((sl,si)=>`<div class="sr" draggable="true" id="slot-${di}-${si}" ondragstart="slotDragStart(event,${di},${si})" ondragover="slotDragOver(event,${di},${si})" ondrop="slotDrop(event,${di},${si})" ondragend="slotDragEnd(event)" style="cursor:grab">
         <div style="display:flex;flex-direction:column;gap:1px;align-items:center;justify-content:center;cursor:grab;opacity:.4;user-select:none">
           <button onclick="moveSlot(${di},${si},-1)" style="border:none;background:transparent;cursor:pointer;font-size:10px;padding:0;line-height:1;color:var(--mu)" title="Move up">▲</button>
@@ -676,12 +671,12 @@ function renderDays(){
         </div>
         <input type="text" value="${esc(sl.t||'')}" placeholder="09:00" style="font-size:11px" oninput="us(${di},${si},'t',this.value)">
         <select class="stype" onchange="us(${di},${si},'type',this.value)" style="background:${TCLR[sl.type]||'#fff'}">
-          ${STYPES.map(x=>`<option value="${x}"${x===sl.type?' selected':''}>${transType(x,uiLang())}</option>`).join('')}
+          ${STYPES.map(x=>`<option${x===sl.type?' selected':''}>${x}</option>`).join('')}
         </select>
-        <input type="text" value="${esc(sl.n||'')}" placeholder="Location / 地点" style="font-size:11px" oninput="us(${di},${si},'n',this.value)">
-        <input type="text" value="${esc(sl.note||'')}" placeholder="Note / 备注" style="font-size:11px" oninput="us(${di},${si},'note',this.value)">
+        <input type="text" value="${esc(sl.n||'')}" placeholder="地点/名称" style="font-size:11px" oninput="us(${di},${si},'n',this.value)">
+        <input type="text" value="${esc(sl.note||'')}" placeholder="备注" style="font-size:11px" oninput="us(${di},${si},'note',this.value)">
         <button class="xb" onclick="rmSlot(${di},${si})">×</button></div>`).join('')}
-      <button class="add-i" onclick="addSlot(${di})"><span class="t-en">＋ Add Slot</span><span class="t-zh">＋ 添加行程</span><span class="t-ja">＋ 追加</span></button>
+      <button class="add-i" onclick="addSlot(${di})">＋ 添加行程</button>
     </div>`;
     el.appendChild(d);
   }
