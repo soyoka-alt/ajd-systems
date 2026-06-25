@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ALL JAPAN DMC — Quotation System</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--P:#1a2744;--A:#c8a96e;--A2:#3d6b8f;--bg:#f4f3ef;--S:#fff;--S2:#f0efe9;
+  --bd:#ddd;--bd2:#e8e8e8;--tx:#1a1a1a;--mu:#666;--li:#aaa;
+  --ok:#2d7a4f;--er:#b93030;--in:#1a5fa8;--warn:#a06000}
+body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;color:var(--tx);background:var(--bg)}
+
+/* NAV */
+.nav{background:var(--P);height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.logo{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px}
+.logo-sub{color:var(--A);font-size:10px;font-weight:400;border-left:1px solid rgba(255,255,255,.2);padding-left:10px}
+.nav-tabs{display:flex;gap:0}
+.nt{padding:0 13px;height:50px;display:flex;align-items:center;color:rgba(255,255,255,.55);font-size:12px;cursor:pointer;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap;gap:5px}
+.nt:hover{color:#fff}.nt.on{color:#fff;border-bottom-color:var(--A)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#666;display:inline-block;transition:.3s}
+.sync-dot.ok{background:#4caf50}.sync-dot.err{background:#f44336}.sync-dot.busy{background:var(--A);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.nav-user{color:rgba(255,255,255,.6);font-size:11px;display:flex;align-items:center;gap:8px}
+
+/* LAYOUT */
+.app{display:grid;grid-template-columns:1fr 345px;height:calc(100vh - 50px);overflow:hidden}
+.left{overflow-y:auto;padding:14px}
+.right{background:var(--S);border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
+
+/* CARD */
+.card{background:var(--S);border:1px solid var(--bd);border-radius:8px;padding:13px;margin-bottom:10px}
+.chd{font-size:12px;font-weight:700;color:var(--P);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd2);display:flex;justify-content:space-between;align-items:center}
+
+/* FORM */
+.lb{font-size:10px;color:var(--mu);display:block;margin-bottom:3px;margin-top:9px;text-transform:uppercase;letter-spacing:.04em}
+.lb:first-child{margin-top:0}
+input[type=text],input[type=number],input[type=date],input[type=password],input[type=email],select,textarea{
+  width:100%;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;
+  font-size:12px;font-family:inherit;background:var(--S);color:var(--tx);outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--A2)}
+textarea{resize:vertical;min-height:52px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* OPT BAR */
+.opt-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.ob{padding:4px 11px;border:1px solid var(--bd);border-radius:99px;font-size:11px;cursor:pointer;background:transparent;color:var(--mu);transition:.15s;display:flex;align-items:center;gap:3px}
+.ob:hover{border-color:var(--A2);color:var(--A2)}.ob.on{background:var(--P);border-color:var(--P);color:#fff;font-weight:600}
+.ob .x{opacity:.5;font-size:12px}.ob .x:hover{opacity:1}
+.ob-add{padding:4px 11px;border:1px dashed var(--A2);border-radius:99px;font-size:11px;cursor:pointer;background:transparent;color:var(--A2);transition:.15s}
+.ob-add:hover{background:#e8f0f8}
+
+/* COST */
+.cat{background:var(--S2);border:1px solid var(--bd2);border-radius:6px;padding:9px;margin-bottom:7px}
+.cat-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.cn{border:none;background:transparent;font-size:12px;font-weight:700;color:var(--P);padding:0;width:160px}
+.cn:focus{outline:none;border-bottom:1px solid var(--A2)}
+.pp{font-size:10px;border:1px solid var(--bd);border-radius:3px;padding:2px 5px;color:var(--mu);background:var(--S)}
+.ct{font-size:11px;font-weight:700;color:var(--P);font-variant-numeric:tabular-nums}
+.ig{display:grid;grid-template-columns:1fr 82px 56px 20px;gap:4px;align-items:center;margin-bottom:3px}
+.igh{display:grid;grid-template-columns:1fr 82px 56px 20px;gap:4px;margin-bottom:3px}
+.igh span{font-size:9px;color:var(--li);text-align:right}.igh span:first-child{text-align:left}
+.xb{width:20px;height:20px;border:1px solid var(--bd2);border-radius:3px;background:transparent;cursor:pointer;color:var(--li);font-size:12px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.xb:hover{background:#fde8e8;color:var(--er);border-color:#f5b8b8}
+.ai-btn{padding:4px 11px;background:var(--A2);color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-weight:600;transition:.15s}
+.ai-btn:hover{opacity:.85}.ai-btn:disabled{opacity:.4;cursor:not-allowed}
+.add-i{font-size:10px;color:var(--A2);border:1px dashed #aac4dc;border-radius:4px;padding:3px 8px;cursor:pointer;width:100%;margin-top:3px;background:transparent}
+.add-i:hover{background:#e8f0f8}
+.add-c{font-size:11px;color:var(--A2);border:1px dashed #aac4dc;border-radius:6px;padding:6px;cursor:pointer;width:100%;background:transparent}
+.add-c:hover{background:#e8f0f8}
+
+/* CUR */
+.cur-r{display:flex;gap:3px}
+.cb{padding:3px 7px;border:1px solid var(--bd);border-radius:3px;font-size:10px;cursor:pointer;background:transparent;color:var(--mu);transition:.15s}
+.cb:hover{border-color:var(--A2);color:var(--A2)}.cb.on{background:var(--P);border-color:var(--P);color:#fff}
+
+/* ITIN */
+.day-block{border:1px solid var(--bd2);border-radius:6px;overflow:hidden;margin-bottom:7px}
+.day-hd{background:var(--P);color:#fff;padding:7px 10px;display:flex;align-items:center;justify-content:space-between}
+.day-hd input{background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);color:#fff;font-size:11px;padding:2px 3px}
+.day-hd input:focus{outline:none;border-bottom-color:rgba(255,255,255,.7)}
+.day-body{padding:9px}
+.sr{display:grid;grid-template-columns:18px 62px 94px 1fr 72px 20px;gap:4px;align-items:center;margin-bottom:4px}
+.srh{display:grid;grid-template-columns:18px 62px 94px 1fr 72px 20px;gap:4px;margin-bottom:3px}
+.srh span{font-size:9px;color:var(--li)}
+.stype{font-size:10px;padding:3px 4px;border:1px solid var(--bd);border-radius:3px}
+.ai-bar{display:flex;align-items:center;gap:7px;padding:8px 10px;background:#f7fafd;border-top:1px solid var(--bd2);flex-wrap:wrap}
+.ai-bar label{font-size:11px;color:var(--mu);white-space:nowrap}
+.ai-st{font-size:11px;color:var(--mu);font-style:italic}
+
+/* ADMIN TABLE */
+.admin-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.admin-tbl th{padding:6px 8px;background:var(--P);color:#fff;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap}
+.admin-tbl td{padding:5px 8px;border-bottom:1px solid var(--bd2);vertical-align:middle}
+.admin-tbl tr:hover td{background:#f7fafd}
+.status-sel{font-size:10px;border:1px solid var(--bd);border-radius:3px;padding:2px 4px}
+.s-draft{background:#fff}.s-sent{background:#fff9e6}.s-won{background:#e8f5ee}.s-lost{background:#fde8e8}.s-follow{background:#e8f0f8}
+.load-btn{padding:3px 8px;font-size:10px;border:1px solid var(--A2);border-radius:3px;cursor:pointer;color:var(--A2);background:transparent}
+.load-btn:hover{background:#e8f0f8}
+.del-btn2{padding:3px 8px;font-size:10px;border:1px solid var(--bd);border-radius:3px;cursor:pointer;color:var(--mu);background:transparent}
+.del-btn2:hover{background:#fde8e8;color:var(--er);border-color:#f5b8b8}
+.filter-bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.filter-bar select,.filter-bar input{width:auto;font-size:11px;padding:4px 7px}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat-card{background:var(--S);border:1px solid var(--bd);border-radius:7px;padding:12px;text-align:center}
+.stat-n{font-size:22px;font-weight:700;color:var(--P);font-variant-numeric:tabular-nums}
+.stat-l{font-size:10px;color:var(--mu);margin-top:2px}
+
+/* RIGHT */
+.rt-bar{display:flex;border-bottom:1px solid var(--bd)}
+.rt{flex:1;padding:8px 4px;font-size:11px;text-align:center;cursor:pointer;color:var(--mu);border-bottom:2px solid transparent;transition:.15s}
+.rt:hover{color:var(--P)}.rt.on{color:var(--P);border-bottom-color:var(--P);font-weight:700}
+.rp{display:none;flex-direction:column;flex:1;overflow:hidden}
+.rp.on{display:flex}
+.rsec{padding:11px 13px;border-bottom:1px solid var(--bd2)}
+.srow{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;border-bottom:1px solid #f5f5f5;font-size:11px}
+.srow:last-child{border:none}
+.sl{color:var(--mu)}.sv{font-weight:500;font-variant-numeric:tabular-nums}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.tc{background:var(--S2);border-radius:6px;padding:10px}
+.tc .tl{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.tc .tv{font-size:18px;font-weight:700;color:var(--P);font-variant-numeric:tabular-nums}
+.mk-row{display:flex;align-items:center;gap:7px}
+.mk-row label{font-size:11px;color:var(--mu);white-space:nowrap}
+.mk-row input[type=range]{flex:1;accent-color:var(--A2)}
+.mv{font-size:12px;font-weight:700;min-width:32px;text-align:right}
+
+/* EXPORT */
+.exp{padding:11px 13px;border-top:1px solid var(--bd)}
+.eg{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px}
+.eb{padding:7px 5px;border:1px solid var(--bd);border-radius:5px;font-size:11px;cursor:pointer;background:transparent;color:var(--P);font-weight:600;text-align:center;transition:.15s}
+.eb:hover{background:var(--S2)}
+.eb.dk{background:var(--P);color:#fff;border-color:var(--P)}.eb.dk:hover{background:#243660}
+.eb.gd{background:var(--A);color:#fff;border-color:var(--A)}.eb.gd:hover{opacity:.9}
+.eb.fw{grid-column:1/-1}
+.save-b{width:100%;padding:7px;background:var(--S2);border:1px solid var(--bd);border-radius:5px;font-size:11px;cursor:pointer;color:var(--P);font-weight:600;margin-bottom:5px;transition:.15s}
+.save-b:hover{background:#e8f0f8}
+.cloud-b{width:100%;padding:7px;background:#e8f5ee;border:1px solid #b2d9c0;border-radius:5px;font-size:11px;cursor:pointer;color:var(--ok);font-weight:600;margin-bottom:5px;transition:.15s}
+.cloud-b:hover{background:#d0edda}
+
+/* MISC */
+.badge{font-size:9px;padding:2px 6px;border-radius:99px;font-weight:600}
+.bb{background:#e0ecf8;color:var(--in)}
+.empty{text-align:center;padding:20px;font-size:11px;color:var(--mu)}
+.sp{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tip-box{background:#fffbf0;border:1px solid #f0e8cc;border-radius:6px;padding:10px;font-size:11px;color:var(--mu);line-height:1.8;margin-top:8px}
+.tip-box strong{color:var(--P)}
+.conn-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.conn-ok{background:#4caf50}.conn-no{background:#ccc}.conn-err{background:#f44336}
+.TYPE_C{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;white-space:nowrap}
+
+/* Trilingual display rules */
+[data-lang="all"] .t-en, [data-lang="all"] .t-zh, [data-lang="all"] .t-ja,
+[data-lang="all"] .lbl-en, [data-lang="all"] .lbl-zh, [data-lang="all"] .lbl-ja { display: inline; }
+[data-lang="all"] .t-zh::before, [data-lang="all"] .t-ja::before { content: " / "; }
+.t-en, .t-zh, .t-ja { display: inline; font-size: inherit; }
+.t-zh::before, .t-ja::before { content: " / "; color: rgba(255,255,255,.35); font-size: .85em; }
+.lbl-zh, .lbl-ja { font-size: .78em; color: var(--mu); margin-left: 3px; }
+/* EN only */
+[data-lang="en"] .t-zh, [data-lang="en"] .t-ja,
+[data-lang="en"] .lbl-zh, [data-lang="en"] .lbl-ja { display: none !important; }
+/* ZH only */
+[data-lang="zh"] .t-en, [data-lang="zh"] .t-ja,
+[data-lang="zh"] .lbl-en, [data-lang="zh"] .lbl-ja { display: none !important; }
+/* JA only */
+[data-lang="ja"] .t-en, [data-lang="ja"] .t-zh,
+[data-lang="ja"] .lbl-en, [data-lang="ja"] .lbl-zh { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="logo">ALL JAPAN DMC <span class="logo-sub">Quotation System</span></div>
+  <div class="nav-tabs">
+    <div class="nt on" id="nt-q" onclick="sv('q')">📋 Quote / 报价</div>
+    <div class="nt" id="nt-i" onclick="sv('i')">🗓 Itinerary / 行程</div>
+    <div class="nt" id="nt-cmp" onclick="sv('cmp')">⚖️ Compare / 对比</div>
+    <div class="nt" id="nt-admin" onclick="sv('admin')">👑 Admin / 管理</div>
+    <div class="nt" id="nt-cfg" onclick="sv('cfg')">⚙️ Settings / 设置</div>
+  </div>
+  <div class="nav-user">
+    <button onclick="toggleLang()" id="langBtn" style="padding:3px 10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:4px;color:#fff;font-size:11px;cursor:pointer;margin-right:10px">EN | 中 | 日</button>
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncTxt">Local + Drive mode</span>
+    <span id="navUser" style="margin-left:6px"></span>
+  </div>
+</div>
+
+<div class="app">
+<div class="left" id="leftCol">
+
+  <div id="optBar" class="opt-bar"></div>
+
+  <!-- QUOTE -->
+  <div id="vq">
+    <div class="card">
+      <div class="chd"><span class="t-en">Basic Info</span><span class="t-zh">基本信息</span><span class="t-ja">基本情報</span> <span id="typeBadge" class="badge bb">Incentive</span></div>
+      <div class="g2">
+        <div><label class="lb"><span class="t-en">Client</span><span class="t-zh">客户</span><span class="t-ja">クライアント</span></label><input type="text" id="clientName" placeholder="e.g. PANDA VACATIONS SDN BHD" oninput="so('clientName',this.value);renderRight()"></div>
+        <div><label class="lb"><span class="t-en">Tour Type</span><span class="t-zh">旅行类型</span><span class="t-ja">旅行タイプ</span></label>
+          <select id="tourType" onchange="so('tourType',this.value);render()">
+            <option>Incentive / MICE</option><option>Luxury FIT</option>
+            <option>Educational Group</option><option>Corporate Study Tour</option>
+          </select>
+        </div>
+      </div>
+      <div class="g3" style="margin-top:2px">
+        <div><label class="lb"><span class="t-en">Departure</span><span class="t-zh">出发日期</span><span class="t-ja">出発日</span></label><input type="date" id="startDate" oninput="so('startDate',this.value);renderRight()"></div>
+        <div><label class="lb"><span class="t-en">Days</span><span class="t-zh">天数</span><span class="t-ja">日数</span></label><input type="number" id="days" value="5" min="1" max="30" oninput="so('days',+this.value);syncDays();render()"></div>
+        <div><label class="lb"><span class="t-en">Pax</span><span class="t-zh">人数</span><span class="t-ja">人数</span></label><input type="number" id="pax" value="30" min="1" oninput="so('pax',+this.value);render()"></div>
+      </div>
+      <div class="g2" style="margin-top:2px">
+        <div><label class="lb"><span class="t-en">Destination</span><span class="t-zh">目的地</span><span class="t-ja">目的地</span></label><input type="text" id="dest" placeholder="e.g. Tokyo → Kyoto → Osaka" oninput="so('dest',this.value);renderRight()"></div>
+        <div><label class="lb"><span class="t-en">Note</span><span class="t-zh">备注</span><span class="t-ja">備考</span></label><input type="text" id="optNote" placeholder="e.g. Mt.Fuji, Disney" oninput="so('optNote',this.value);renderRight()"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chd"><span class="t-en">Cost Items</span><span class="t-zh">费用项目</span><span class="t-ja">費用項目</span>
+        <div class="cur-r" id="curR">
+          <button class="cb on" onclick="setCur('JPY',this)">¥ JPY</button>
+          <button class="cb" onclick="setCur('USD',this)">$ USD</button>
+          <button class="cb" onclick="setCur('SGD',this)">S$ SGD</button>
+          <button class="cb" onclick="setCur('MYR',this)">RM MYR</button>
+          <button class="cb" onclick="setCur('EUR',this)">€ EUR</button>
+        </div>
+      </div>
+      <div id="cats"></div>
+      <button class="add-c" onclick="addCat()"><span class="t-en">＋ Add Category</span><span class="t-zh">＋ 添加类别</span><span class="t-ja">＋ カテゴリ追加</span></button>
+    </div>
+
+    <!-- Notes & Policy Card -->
+    <div class="card" id="notesPolicyCard">
+      <div class="chd">
+        <span class="t-en">Notes &amp; Policy</span><span class="t-zh"> 备注 &amp; 政策</span><span class="t-ja"> 備考 &amp; ポリシー</span>
+      </div>
+      <label class="lb"><span class="t-en">Notes</span><span class="t-zh"> 备注</span><span class="t-ja"> 備考</span></label>
+      <textarea id="proposalNotes" rows="4" oninput="so('notes',this.value)" style="width:100%;font-size:12px;line-height:1.6;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;font-family:inherit;resize:vertical"></textarea>
+      <div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">
+        <button class="add-i" style="width:auto;padding:3px 10px" onclick="insertNoteTemplate('inclusions')">＋ <span class="t-en">Inclusions/Exclusions</span><span class="t-zh">含/不含项目</span><span class="t-ja">含む/含まない</span></button>
+        <button class="add-i" style="width:auto;padding:3px 10px" onclick="insertNoteTemplate('general')">＋ <span class="t-en">General Notes</span><span class="t-zh">一般备注</span><span class="t-ja">一般備考</span></button>
+      </div>
+      <label class="lb" style="margin-top:12px"><span class="t-en">Cancellation Policy</span><span class="t-zh"> 取消政策</span><span class="t-ja"> キャンセルポリシー</span></label>
+      <textarea id="cancellationPolicy" rows="5" oninput="so('cancellation',this.value)" style="width:100%;font-size:12px;line-height:1.6;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;font-family:inherit;resize:vertical"></textarea>
+      <label class="lb" style="margin-top:10px"><span class="t-en">Payment Policy</span><span class="t-zh"> 付款政策</span><span class="t-ja"> 支払いポリシー</span></label>
+      <textarea id="paymentPolicy" rows="4" oninput="so('payment',this.value)" style="width:100%;font-size:12px;line-height:1.6;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;font-family:inherit;resize:vertical"></textarea>
+      <button class="add-i" style="width:auto;margin-top:6px;padding:3px 10px" onclick="resetPolicies()">
+        ↺ <span class="t-en">Reset to default</span><span class="t-zh">恢复默认</span><span class="t-ja">デフォルトに戻す</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ITIN -->
+  <div id="vi" style="display:none">
+    <div class="card">
+      <div class="chd"><span class="t-en">AI Itinerary</span><span class="t-zh">AI 行程生成</span><span class="t-ja">AI 旅程作成</span></div>
+      <div style="display:flex;gap:7px;padding:7px 0;border-bottom:1px solid var(--bd2);margin-bottom:8px;align-items:center;flex-wrap:wrap">
+        <label class="lb" style="margin:0;white-space:nowrap">API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-api03-..." style="flex:1;min-width:180px;font-size:11px" oninput="localStorage.setItem('ajd_key',this.value)">
+        <span style="font-size:10px;color:var(--li)">Local only / 仅存本地</span>
+      </div>
+      <div class="ai-bar" style="padding:0;background:transparent;border:none;gap:8px">
+        <label><span class="t-en">Language</span><span class="t-zh">语言</span><span class="t-ja">言語</span></label>
+        <select id="itLang" style="width:80px;font-size:11px"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option></select>
+        <label><span class="t-en">Style</span><span class="t-zh">风格</span><span class="t-ja">スタイル</span></label>
+        <select id="itStyle" style="width:100px;font-size:11px">
+          <option value="incentive">Incentive High-end</option><option value="edu">Educational Tour</option>
+          <option value="fit">Luxury FIT</option><option value="corp">Corporate Study</option>
+        </select>
+        <button class="ai-btn" id="aiBtn" onclick="genAI()"><span class="t-en">✦ AI Generate</span><span class="t-zh">✦ AI 生成行程</span><span class="t-ja">✦ AI 旅程生成</span></button>
+        <span class="ai-st" id="aiSt"></span>
+      </div>
+    </div>
+    <div id="dayBlocks"></div>
+    <button class="add-c" onclick="addDay()"><span class="t-en">＋ Add Day</span><span class="t-zh">＋ 添加天数</span><span class="t-ja">＋ 日程追加</span></button>
+  </div>
+
+  <!-- COMPARE -->
+  <div id="vcmp" style="display:none">
+    <div class="card"><div class="chd"><span class="t-en">Option Compare</span><span class="t-zh">方案对比</span><span class="t-ja">方案比較</span></div><div id="cmpC"></div></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="vadmin" style="display:none">
+    <div class="card">
+      <div class="chd"><span class="t-en">All Quotes</span><span class="t-zh">全员报价</span><span class="t-ja">全員見積</span> <button class="ai-btn" onclick="loadCloud()"><span class="t-en">↻ Refresh</span><span class="t-zh">↻ 刷新</span><span class="t-ja">↻ 更新</span></button></div>
+      <div id="statsArea"></div>
+      <div class="filter-bar">
+        <select id="fStatus" onchange="filterAdmin()"><option value="">All Status</option><option><span class="t-en">Draft</span><span class="t-zh">草稿</span><span class="t-ja">下書き</span></option><option><span class="t-en">Sent</span><span class="t-zh">已发送</span><span class="t-ja">送付済</span></option><option><span class="t-en">Won</span><span class="t-zh">成单</span><span class="t-ja">成約</span></option><option><span class="t-en">Following</span><span class="t-zh">跟进中</span><span class="t-ja">フォロー中</span></option><option><span class="t-en">Cancelled</span><span class="t-zh">取消</span><span class="t-ja">キャンセル</span></option></select>
+        <select id="fOp" onchange="filterAdmin()"><option value="">All Staff</option></select>
+        <input type="text" id="fSearch" placeholder="Search client…" oninput="filterAdmin()" style="width:140px">
+        <button class="ai-btn" onclick="exportAdminExcel()"><span class="t-en">📊 Export All</span><span class="t-zh">📊 导出全部</span><span class="t-ja">📊 全件出力</span></button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="admin-tbl" id="adminTbl">
+          <thead><tr>
+            <th>ID</th><th>时间</th><th>操作人</th><th>客户</th><th>类型</th>
+            <th><span class="t-en">Destination</span><span class="t-zh">目的地</span><span class="t-ja">目的地</span></th><th><span class="t-en">Pax</span><span class="t-zh">人数</span><span class="t-ja">人数</span></th><th>天数</th><th>报价方案</th>
+            <th style="text-align:right">报价总价</th><th style="text-align:right">人均</th>
+            <th>货币</th><th>状态</th><th>操作</th>
+          </tr></thead>
+          <tbody id="adminBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="vcfg" style="display:none">
+    <div class="card">
+      <div class="chd"><span class="t-en">Cloud Sync</span><span class="t-zh">云端同步</span><span class="t-ja">クラウド同期</span></div>
+      <label class="lb">Your name (shown in Admin view)</label>
+      <input type="text" id="cfg_op" placeholder="e.g. Soyoka" oninput="saveCfg()">
+      <label class="lb">Not needed in Drive mode / Drive共有モードでは不要</label>
+      <input type="text" id="cfg_url" placeholder="https://script.google.com/macros/s/..." oninput="saveCfg()">
+      <button class="ai-btn" style="margin-top:8px;width:100%" onclick="testConn()"><span class="t-en">Test Connection</span><span class="t-zh">测试连接</span><span class="t-ja">接続テスト</span></button>
+      <div id="connResult" style="margin-top:6px;font-size:11px"></div>
+      <div class="tip-box">
+        <strong>部署步骤（一次性，5分钟）</strong><br>
+        1. 打开 <a href="https://sheets.google.com" target="_blank" style="color:var(--A2)">Google Sheets</a> → 新建空白表格，命名为「AJD报价系统」<br>
+        2. 菜单 → 扩展程序 → Apps Script<br>
+        3. 删除默认代码，将「<strong>Apps Script 后端代码</strong>」全部粘贴进去<br>
+        4. 保存（Ctrl+S）→ 部署 → 新建部署<br>
+        5. 类型：<strong>网页应用</strong> / 执行身份：<strong>我</strong> / 访问权限：<strong>组织内所有人</strong><br>
+        6. 点「部署」→ 复制 URL → 粘贴到上方输入框<br>
+        7. 全员下载此 HTML 文件，填入相同的 URL，即可集中管理
+      </div>
+    </div>
+    <div class="card">
+      <div class="chd"><span class="t-en">Company Info</span><span class="t-zh">公司信息</span><span class="t-ja">会社情報</span></div>
+      <div class="g2">
+        <div><label class="lb"><span class="t-en">Company (JA)</span><span class="t-zh">公司名（日）</span><span class="t-ja">会社名（日）</span></label><input type="text" id="cfg_co" value="ALL JAPAN DMC 株式会社" oninput="saveCfg()"></div>
+        <div><label class="lb"><span class="t-en">Company (EN)</span><span class="t-zh">公司名（英）</span><span class="t-ja">会社名（英）</span></label><input type="text" id="cfg_coe" value="ALL JAPAN DMC Co., Ltd." oninput="saveCfg()"></div>
+      </div>
+      <div><label class="lb"><span class="t-en">Address</span><span class="t-zh">地址</span><span class="t-ja">住所</span></label><input type="text" id="cfg_addr" value="〒100-0005 東京都千代田区丸の内トラストタワー本館" oninput="saveCfg()"></div>
+      <div class="g2">
+        <div><label class="lb">Email</label><input type="text" id="cfg_email" value="info@alljapandmc.com" oninput="saveCfg()"></div>
+        <div><label class="lb">Website</label><input type="text" id="cfg_web" value="www.alljapandmc.com" oninput="saveCfg()"></div>
+      </div>
+      <div><label class="lb"><span class="t-en">Signature</span><span class="t-zh">担当署名</span><span class="t-ja">担当者署名</span></label><input type="text" id="cfg_contact" value="ALL JAPAN DMC 担当" oninput="saveCfg()"></div>
+    </div>
+    <div class="card">
+      <div class="chd"><span class="t-en">Defaults</span><span class="t-zh">默认值</span><span class="t-ja">デフォルト</span></div>
+      <div class="g2">
+        <div><label class="lb"><span class="t-en">Default Markup %</span><span class="t-zh">默认利润率</span><span class="t-ja">デフォルトMarkup</span></label><input type="number" id="cfg_mk" value="20" min="0" max="100" oninput="saveCfg()"></div>
+        <div><label class="lb"><span class="t-en">Default Currency</span><span class="t-zh">默认货币</span><span class="t-ja">デフォルト通貨</span></label>
+          <select id="cfg_cur" onchange="saveCfg()"><option>JPY</option><option>USD</option><option>SGD</option><option>MYR</option><option>EUR</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /left -->
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="rt-bar">
+    <div class="rt on" id="rt-s" onclick="setRT('s',this)"><span class="t-en">Summary</span><span class="t-zh">摘要</span><span class="t-ja">サマリー</span></div>
+    <div class="rt" id="rt-d" onclick="setRT('d',this)"><span class="t-en">Detail</span><span class="t-zh">明细</span><span class="t-ja">明細</span></div>
+    <div class="rt" id="rt-it" onclick="setRT('it',this)"><span class="t-en">Itinerary</span><span class="t-zh">行程</span><span class="t-ja">旅程</span></div>
+    <div class="rt" id="rt-tr" onclick="setRT('tr',this)"><span class="t-en">Tiers</span><span class="t-zh">阶梯</span><span class="t-ja">段階</span></div>
+  </div>
+
+  <div class="rp on" id="rs">
+    <div class="rsec">
+      <div id="rCl" style="font-size:13px;font-weight:700;color:var(--P)"></div>
+      <div id="rInf" style="font-size:10px;color:var(--mu);margin-top:2px"></div>
+      <div class="mk-row" style="margin-top:9px">
+        <label>Markup %</label>
+        <input type="range" id="markup" min="0" max="60" value="20" step="1" oninput="so('markup',+this.value);render()">
+        <span class="mv" id="mkv">20%</span>
+      </div>
+    </div>
+    <div class="rsec" id="sumRows" style="flex:1;overflow-y:auto"></div>
+    <div class="rsec">
+      <div class="tg">
+        <div class="tc"><div class="tl"><span class="t-en">Group Total</span><span class="t-zh">团体总价</span><span class="t-ja">グループ合計</span></div><div class="tv" id="tG">—</div></div>
+        <div class="tc"><div class="tl"><span class="t-en">Per Pax</span><span class="t-zh">人均</span><span class="t-ja">一人当たり</span></div><div class="tv" id="tP">—</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-top:8px;padding-top:8px;border-top:1px solid var(--bd2)">
+        <span><span class="t-en">Profit</span><span class="t-zh">利润</span><span class="t-ja">利益</span></span>
+        <span style="color:var(--ok);font-weight:700" id="tPr">—</span>
+        <span id="tMk"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="rp" id="rd">
+    <div style="padding:11px;flex:1;overflow-y:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead><tr style="border-bottom:2px solid var(--bd)">
+          <th style="text-align:left;padding:3px;color:var(--mu)">项目</th>
+          <th style="text-align:right;padding:3px;color:var(--mu)">NET</th>
+          <th style="text-align:right;padding:3px;color:var(--mu)">QUOTE</th>
+        </tr></thead>
+        <tbody id="detB"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="rp" id="rit">
+    <div style="padding:11px;flex:1;overflow-y:auto" id="itOv"><div class="empty">切换「行程」标签编辑</div></div>
+  </div>
+
+  <div class="rp" id="rTr">
+    <div style="padding:11px 13px;flex:1;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--P)"><span class="t-en">Tiered Pricing</span><span class="t-zh"> 阶梯报价</span><span class="t-ja"> 段階見積</span></div>
+        <button onclick="addTier()" style="padding:3px 10px;font-size:10px;border:1px dashed var(--A2);border-radius:4px;cursor:pointer;color:var(--A2);background:transparent">＋ <span class="t-en">Add</span><span class="t-zh">添加</span><span class="t-ja">追加</span></button>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px" id="tierTable">
+      </table>
+      <div style="margin-top:12px;padding:8px;background:var(--S2);border-radius:6px;font-size:10px;color:var(--mu);line-height:1.7">
+        <span class="t-en">★ = base pax. Fixed costs spread across all tiers automatically.</span>
+        <span class="t-zh">★ = 基准人数。固定费用自动按各档人数分摊。</span>
+        <span class="t-ja">★ = 基準人数。固定費用は各段階で自動按分。</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="exp">
+    <button class="cloud-b" onclick="cloudSave()"><span class="t-en">☁ Save to Cloud</span><span class="t-zh">☁ 保存到云端</span><span class="t-ja">☁ クラウド保存</span></button>
+    <button class="save-b" onclick="localSave()"><span class="t-en">💾 Save Local</span><span class="t-zh">💾 本地保存</span><span class="t-ja">💾 ローカル保存</span></button>
+    <div class="eg">
+      <button class="eb gd" onclick="expWord()"><span class="t-en">📄 Word Quote</span><span class="t-zh">📄 Word 报价书</span><span class="t-ja">📄 Word 見積書</span></button>
+      <button class="eb dk" onclick="expExcel()"><span class="t-en">📊 Excel Quote</span><span class="t-zh">📊 Excel 报价</span><span class="t-ja">📊 Excel 見積</span></button>
+      <button class="eb" onclick="expWordIt()"><span class="t-en">📄 Word Itinerary</span><span class="t-zh">📄 Word 行程书</span><span class="t-ja">📄 Word 旅程書</span></button>
+      <button class="eb" style="background:var(--A);color:#fff;border-color:var(--A)" onclick="expWordFull()"><span class="t-en">🌟 Full Proposal</span><span class="t-zh"> 完整提案</span><span class="t-ja"> 完全提案書</span></button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ══════════ STATE ══════════
+const SYM={JPY:'¥',USD:'$',SGD:'S$',MYR:'RM',EUR:'€'};
+const STYPES=['景点','餐厅','交通','住宿','活动','自由时间','其他'];
+const TCLR={景点:'#e8f0f8',餐厅:'#fef3e2',交通:'#f0f0f0',住宿:'#e8f8ee',活动:'#f3e8f8','自由时间':'#fafafa',其他:'#fafafa'};
+const SMAP={'草稿':'s-draft','已发送':'s-sent','成单':'s-won','取消':'s-lost','跟进中':'s-follow'};
+
+let cur='JPY',view='q',curOI=0;
+let cfg={},opts=[],allQuotes=[];
+let catId=50;
+
+function defCats(){return[
+  {id:1,n:'住宿 Accommodation',pp:true,items:[{n:'Hotel (4★ twin share)',c:18000,q:1}]},
+  {id:2,n:'交通 Transportation',pp:false,items:[{n:'専用バス Charter Bus',c:280000,q:1},{n:'新幹線（団体）',c:0,q:1}]},
+  {id:3,n:'餐饮 Meals',pp:true,items:[{n:'Welcome Dinner',c:8000,q:1},{n:'Lunch Set',c:3500,q:1}]},
+  {id:4,n:'活动 Activities',pp:true,items:[{n:'茶道体験',c:3000,q:1}]},
+  {id:5,n:'导游 Guide & Ops',pp:false,items:[{n:'Tour Guide（全程）',c:50000,q:1},{n:'AJD Operations Fee',c:30000,q:1}]},
+  {id:6,n:'Optional / 可选项目',pp:true,optional:true,items:[{n:'',c:0,q:1}]},
+]}
+function defDays(n,sd){
+  return Array.from({length:n||5},(_,i)=>{
+    let d='';if(sd){const dt=new Date(sd);dt.setDate(dt.getDate()+i);d=dt.toISOString().slice(0,10);}
+    return{date:d,title:'Day '+(i+1),slots:[{t:'09:00',type:'交通',n:'',note:''},{t:'12:00',type:'餐厅',n:'',note:''},{t:'18:00',type:'住宿',n:'',note:''}]};
+  });
+}
+function getDefaultCancellation(){
+  return `30+ days before departure: Full refund
+29-15 days before departure: 50% cancellation fee
+14-7 days before departure: 75% cancellation fee
+6-0 days before departure: 100% cancellation fee (no refund)
+No-show: 100% cancellation fee
+
+・Force majeure events (natural disasters, government travel bans) will be handled case by case.
+・All cancellations must be submitted in writing to ALL JAPAN DMC.`;
+}
+function getDefaultPayment(cur){
+  return `Deposit: 30% upon confirmation of booking
+Final payment: 60 days before departure date
+・Payments accepted via bank transfer (TT) to ALL JAPAN DMC account
+・Bank charges are to be borne by the client
+・All prices quoted in {currency} and subject to exchange rate fluctuations`.replace('{currency}', cur||'JPY');
+}
+function getDefaultNotes(pax){
+  return `INCLUSIONS:
+・All accommodation as per itinerary
+・Transportation as per itinerary
+・Meals as per itinerary (B = Breakfast, L = Lunch, D = Dinner)
+・English/Chinese speaking tour guide
+・All entrance fees as per itinerary
+・AJD operations and coordination fee
+
+EXCLUSIONS:
+・International airfare
+・Travel insurance
+・Personal expenses and gratuities
+・Items not mentioned in the itinerary
+・Any additional activities not listed above`.replace('{pax}', pax||30);
+}
+
+function defOpt(){return{id:genId(),name:'Option A',clientName:'',tourType:'Incentive / MICE',startDate:'',days:5,pax:30,dest:'',optNote:'',markup:20,cats:defCats(),itin:defDays(5,''),tiers:[10,15,20,25,30],notes:getDefaultNotes(30),cancellation:getDefaultCancellation(),payment:getDefaultPayment('JPY')}}
+
+function genId(){return Math.random().toString(36).slice(2,10).toUpperCase();}
+
+// ══════════ INIT ══════════
+function init(){
+  // Auto-detect Apps Script hosting
+  if(window.location.href.includes('script.google.com')){
+    const autoUrl = window.location.href.split('?')[0];
+    cfg = JSON.parse(localStorage.getItem('ajd_cfg') || '{}');
+    cfg.url = autoUrl;
+    localStorage.setItem('ajd_cfg', JSON.stringify(cfg));
+  }
+  opts=[defOpt()];
+  const sc=localStorage.getItem('ajd_cfg');
+  cfg=sc?JSON.parse(sc):{co:'ALL JAPAN DMC 株式会社',coe:'ALL JAPAN DMC Co., Ltd.',addr:'〒100-0005 東京都千代田区丸の内トラストタワー本館',email:'info@alljapandmc.com',web:'www.alljapandmc.com',contact:'ALL JAPAN DMC 担当',mk:20,cur:'JPY',url:'',op:''};
+  const ak=localStorage.getItem('ajd_key')||'';document.getElementById('apiKey').value=ak;
+  loadCfgUI();loadOptUI();
+  document.getElementById('navUser').textContent=cfg.op||'';
+  updateSyncUI(cfg.url?'idle':'off');
+  render();
+}
+function saveCfg(){
+  cfg={co:v('cfg_co'),coe:v('cfg_coe'),addr:v('cfg_addr'),email:v('cfg_email'),web:v('cfg_web'),contact:v('cfg_contact'),mk:+v('cfg_mk'),cur:v('cfg_cur'),url:v('cfg_url'),op:v('cfg_op')};
+  localStorage.setItem('ajd_cfg',JSON.stringify(cfg));
+  document.getElementById('navUser').textContent=cfg.op||'';
+  updateSyncUI(cfg.url?'idle':'off');
+}
+function loadCfgUI(){['co','coe','addr','email','web','contact','mk','cur','url','op'].forEach(k=>{const el=document.getElementById('cfg_'+k);if(el&&cfg[k]!==undefined)el.value=cfg[k];});}
+function v(id){const el=document.getElementById(id);return el?el.value:'';}
+
+// ══════════ SYNC UI ══════════
+function updateSyncUI(state){
+  const dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt');
+  if(state==='off'){dot.className='sync-dot';txt.textContent='Local + Drive mode';}
+  else if(state==='idle'){dot.className='sync-dot ok';txt.textContent='Ready ✓';}
+  else if(state==='busy'){dot.className='sync-dot busy';txt.textContent='Syncing… / 同步中…';}
+  else if(state==='ok'){dot.className='sync-dot ok';txt.textContent='Synced ✓';}
+  else if(state==='err'){dot.className='sync-dot err';txt.textContent='Sync failed / 失败';}
+}
+
+// ══════════ VIEW ══════════
+function sv(vn){
+  view=vn;
+  ['q','i','cmp','admin','cfg'].forEach(x=>{
+    document.getElementById('v'+x).style.display=vn===x?'':'none';
+    document.getElementById('nt-'+x).classList.toggle('on',vn===x);
+  });
+  document.getElementById('optBar').style.display=['q','i'].includes(vn)?'flex':'none';
+  if(vn==='cmp')renderCmp();
+  if(vn==='admin'){loadFromLocalHistory();renderAdmin();}
+  render();
+}
+function setRT(t,el){
+  document.querySelectorAll('.rt').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.rp').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');document.getElementById('r'+t).classList.add('on');
+}
+
+// ══════════ OPTIONS ══════════
+function co(){return opts[curOI];}
+function so(f,val){co()[f]=val;}
+function addOpt(){
+  const p=co();const o=JSON.parse(JSON.stringify(p));
+  o.id=genId();o.name='Option '+'ABCDEFGHIJ'[opts.length%10];o.optNote='';
+  opts.push(o);curOI=opts.length-1;loadOptUI();render();
+}
+function rmOpt(i){if(opts.length===1){alert('至少保留一个方案');return;}opts.splice(i,1);if(curOI>=opts.length)curOI=opts.length-1;loadOptUI();render();}
+function swOpt(i){curOI=i;loadOptUI();render();}
+function loadOptUI(){
+  const o=co();
+  if(!o.tiers||!o.tiers.length)o.tiers=[10,15,20,25,30];
+  if(!o.notes)o.notes=getDefaultNotes(o.pax||30);
+  if(!o.cancellation)o.cancellation=getDefaultCancellation();
+  if(!o.payment)o.payment=getDefaultPayment('JPY');
+  ['clientName','tourType','startDate','dest','optNote'].forEach(f=>{const el=document.getElementById(f);if(el)el.value=o[f]||'';});
+  document.getElementById('days').value=o.days||5;
+  document.getElementById('pax').value=o.pax||30;
+  document.getElementById('markup').value=o.markup||20;
+  const pn=document.getElementById('proposalNotes');if(pn)pn.value=o.notes||'';
+  const cp=document.getElementById('cancellationPolicy');if(cp)cp.value=o.cancellation||'';
+  const pp=document.getElementById('paymentPolicy');if(pp)pp.value=o.payment||'';
+}
+function renderOptBar(){
+  const el=document.getElementById('optBar');el.innerHTML='';
+  opts.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='ob'+(i===curOI?' on':'');
+    b.innerHTML=esc(o.name)+'<span class="x" onclick="event.stopPropagation();rmOpt('+i+')">×</span>';
+    b.onclick=()=>swOpt(i);el.appendChild(b);
+  });
+  const a=document.createElement('button');a.className='ob-add';a.textContent='＋ 添加方案';a.onclick=addOpt;el.appendChild(a);
+}
+
+// ══════════ COSTS ══════════
+function calcCat(cat,pax){if(cat.optional)return 0;return cat.items.reduce((s,i)=>s+(cat.pp?i.c*i.q*pax:i.c*i.q),0);}
+function calcNet(o){return o.cats.reduce((s,c)=>s+calcCat(c,o.pax),0);}
+function calcQ(o){return calcNet(o)*(1+(o.markup||0)/100);}
+function fmt(n){return SYM[cur]+Math.round(n).toLocaleString();}
+function addCat(){catId++;co().cats.push({id:catId,n:'新类别',pp:true,items:[{n:'',c:0,q:1}]});render();}
+function addItem(cid){co().cats.find(c=>c.id===cid).items.push({n:'',c:0,q:1});render();}
+function delItem(cid,i){co().cats.find(c=>c.id===cid).items.splice(i,1);render();}
+function delCat(cid){co().cats=co().cats.filter(c=>c.id!==cid);render();}
+function uc(cid,f,val){
+  const c=co().cats.find(x=>x.id===cid);
+  if(f==='pp') c[f]=val==='true';
+  else if(f==='optional') c[f]=val;  // boolean passed directly
+  else c[f]=val;
+  if(f==='pp'||f==='optional'){render();}
+  else{renderRight();updateCatTotal(cid);}
+}
+function ui(cid,i,f,val){
+  const it=co().cats.find(c=>c.id===cid).items[i];
+  it[f]=f==='c'||f==='q'?parseFloat(val)||0:val;
+  if(f==='n'){renderRight();updateCatTotal(cid);}  // name: no re-render
+  else{renderRight();updateCatTotal(cid);}          // cost/qty: update totals only
+}
+function setCur(c,el){cur=c;document.querySelectorAll('.cb').forEach(b=>b.classList.remove('on'));el.classList.add('on');render();}
+function syncDays(){const o=co();const n=o.days||5;while(o.itin.length<n){const i=o.itin.length;let d='';if(o.startDate){const dt=new Date(o.startDate);dt.setDate(dt.getDate()+i);d=dt.toISOString().slice(0,10);}o.itin.push({date:d,title:'Day '+(i+1),slots:[{t:'09:00',type:'交通',n:'',note:''}]});}}
+
+function renderCats(){
+  const o=co();const el=document.getElementById('cats');el.innerHTML='';
+  o.cats.forEach(cat=>{
+    const tot=calcCat(cat,o.pax);const d=document.createElement('div');d.className='cat';
+    const optBadge=cat.optional?`<span style="font-size:9px;padding:1px 6px;border-radius:3px;background:#fff3cd;color:#856404;font-weight:600;border:1px solid #ffc107">OPT</span>`:'';
+    const optToggle=`<button onclick="uc(${cat.id},'optional',${!cat.optional})" title="${cat.optional?'Include in total':'Exclude from total'}" style="padding:1px 6px;font-size:9px;border:1px solid ${cat.optional?'#ffc107':'var(--bd)'};border-radius:3px;background:${cat.optional?'#fff3cd':'transparent'};color:${cat.optional?'#856404':'var(--mu)'};cursor:pointer">OPT</button>`;
+    d.innerHTML=`<div class="cat-hd"><div style="display:flex;align-items:center;gap:5px">
+      <input class="cn" type="text" value="${esc(cat.n)}" oninput="uc(${cat.id},'n',this.value)">
+      <select class="pp" onchange="uc(${cat.id},'pp',this.value)"><option value="true" ${cat.pp?'selected':''}>×人数</option><option value="false" ${!cat.pp?'selected':''}>固定</option></select>
+      ${optToggle}
+    </div><div style="display:flex;align-items:center;gap:5px"><span class="ct" data-catid="${cat.id}" style="${cat.optional?'color:#856404;text-decoration:line-through':''}">${cat.optional?'OPT':fmt(tot)}</span><button class="xb" onclick="delCat(${cat.id})">×</button></div></div>
+    <div class="igh"><span>项目名</span><span>单价(${cur})</span><span>数量</span><span></span></div>
+    ${cat.items.map((it,i)=>`<div class="ig">
+      <input type="text" value="${esc(it.n)}" placeholder="名称" oninput="ui(${cat.id},${i},'n',this.value)">
+      <input type="number" value="${it.c}" style="text-align:right" oninput="ui(${cat.id},${i},'c',this.value)">
+      <input type="number" value="${it.q}" min="0.5" step="0.5" style="text-align:right" oninput="ui(${cat.id},${i},'q',this.value)">
+      <button class="xb" onclick="delItem(${cat.id},${i})">×</button></div>`).join('')}
+    <button class="add-i" onclick="addItem(${cat.id})"><span class="t-en">＋ Add Item</span><span class="t-zh">＋ 添加项目</span><span class="t-ja">＋ 項目追加</span></button>`;
+    el.appendChild(d);
+  });
+}
+
+// ══════════ ITIN ══════════
+function addDay(){const it=co().itin;it.push({date:'',title:'Day '+(it.length+1),slots:[{t:'',type:'景点',n:'',note:''}]});render();}
+function rmDay(i){co().itin.splice(i,1);render();}
+function addSlot(di){co().itin[di].slots.push({t:'',type:'景点',n:'',note:''});render();}
+function rmSlot(di,si){co().itin[di].slots.splice(si,1);render();}
+function moveSlot(di,si,dir){
+  const slots=co().itin[di].slots;
+  const newIdx=si+dir;
+  if(newIdx<0||newIdx>=slots.length)return;
+  const tmp=slots[si];slots[si]=slots[newIdx];slots[newIdx]=tmp;
+  render();
+}
+function ud(di,f,val){co().itin[di][f]=val;renderRight();}
+function us(di,si,f,val){co().itin[di].slots[si][f]=val;}
+
+function renderDays(){
+  syncDays();const el=document.getElementById('dayBlocks');el.innerHTML='';
+  const n=co().days||co().itin.length;
+  for(let di=0;di<n;di++){
+    const day=co().itin[di]||{date:'',title:'Day '+(di+1),slots:[]};
+    const d=document.createElement('div');d.className='day-block';
+    d.innerHTML=`<div class="day-hd"><div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;font-weight:700;letter-spacing:.05em">DAY ${di+1}</span>
+      <input type="date" value="${day.date||''}" style="width:110px" onchange="ud(${di},'date',this.value)">
+      <input type="text" value="${esc(day.title||'')}" placeholder="标题" style="width:150px" oninput="ud(${di},'title',this.value)">
+    </div><button class="xb" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff" onclick="rmDay(${di})">×</button></div>
+    <div class="day-body">
+      <div class="srh"><span></span><span>时间</span><span>类型</span><span>景点/内容</span><span>备注</span><span></span></div>
+      ${day.slots.map((sl,si)=>`<div class="sr" draggable="true" id="slot-${di}-${si}" ondragstart="slotDragStart(event,${di},${si})" ondragover="slotDragOver(event,${di},${si})" ondrop="slotDrop(event,${di},${si})" ondragend="slotDragEnd(event)" style="cursor:grab">
+        <div style="display:flex;flex-direction:column;gap:1px;align-items:center;justify-content:center;cursor:grab;opacity:.4;user-select:none">
+          <button onclick="moveSlot(${di},${si},-1)" style="border:none;background:transparent;cursor:pointer;font-size:10px;padding:0;line-height:1;color:var(--mu)" title="Move up">▲</button>
+          <button onclick="moveSlot(${di},${si},1)" style="border:none;background:transparent;cursor:pointer;font-size:10px;padding:0;line-height:1;color:var(--mu)" title="Move down">▼</button>
+        </div>
+        <input type="text" value="${esc(sl.t||'')}" placeholder="09:00" style="font-size:11px" oninput="us(${di},${si},'t',this.value)">
+        <select class="stype" onchange="us(${di},${si},'type',this.value)" style="background:${TCLR[sl.type]||'#fff'}">
+          ${STYPES.map(x=>`<option${x===sl.type?' selected':''}>${x}</option>`).join('')}
+        </select>
+        <input type="text" value="${esc(sl.n||'')}" placeholder="地点/名称" style="font-size:11px" oninput="us(${di},${si},'n',this.value)">
+        <input type="text" value="${esc(sl.note||'')}" placeholder="备注" style="font-size:11px" oninput="us(${di},${si},'note',this.value)">
+        <button class="xb" onclick="rmSlot(${di},${si})">×</button></div>`).join('')}
+      <button class="add-i" onclick="addSlot(${di})">＋ 添加行程</button>
+    </div>`;
+    el.appendChild(d);
+  }
+}
+
+async function genAI(){
+  const key=document.getElementById('apiKey').value.trim();
+  if(!key){alert('请先输入 Claude API Key');return;}
+  const o=co();const btn=document.getElementById('aiBtn');const st=document.getElementById('aiSt');
+  btn.disabled=true;st.innerHTML='<span class="sp">⟳</span> 生成中…';
+  const STYLE={incentive:'高端激励旅游，突出仪式感与专属体验',edu:'教育游学，融入文化学习与互动体验',fit:'精品自由行，灵活丰富',corp:'企业研修，兼顾效率与体验'};
+  const lang={'zh':'中文','en':'English','ja':'日本語'}[document.getElementById('itLang').value];
+  const style=STYLE[document.getElementById('itStyle').value]||'';
+  const prompt=`你是日本入境旅游专业策划师。
+客户：${o.clientName||'待定'}，类型：${o.tourType}，目的地：${o.dest||'日本'}，${o.days}天，${o.pax}人。
+风格：${style}，语言：${lang}。
+生成${o.days}天详细行程，每天3-6个时段。
+严格JSON输出，无其他文字：
+{"days":[{"title":"Day 1标题","date":"","slots":[{"t":"09:00","type":"交通","n":"内容","note":"备注"}]}]}
+type只能是：景点/餐厅/交通/住宿/活动/自由时间/其他`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,messages:[{role:'user',content:prompt}]})});
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||res.status);}
+    const data=await res.json();
+    const j=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+    co().itin=j.days.slice(0,o.days).map((d,i)=>({date:d.date||'',title:d.title||'Day '+(i+1),slots:(d.slots||[]).map(s=>({t:s.t||'',type:s.type||'景点',n:s.n||'',note:s.note||''}))}));
+    st.textContent='✓ 生成完成';render();
+  }catch(e){st.textContent='✗ '+e.message;}
+  btn.disabled=false;
+}
+
+// ══════════ RIGHT PANEL ══════════
+function renderRight(){
+  const o=co();const pax=o.pax||1;const mk=o.markup||0;
+  document.getElementById('mkv').textContent=mk+'%';document.getElementById('markup').value=mk;
+  document.getElementById('rCl').textContent=o.clientName||'（未填客户名）';
+  document.getElementById('rInf').textContent=[o.dest,o.startDate&&o.days?o.startDate+' · '+o.days+'D':'',o.pax?o.pax+'pax':''].filter(Boolean).join(' · ');
+  document.getElementById('typeBadge').textContent=o.tourType;
+  const net=calcNet(o);const q=calcQ(o);const pp=q/pax;
+  const sr=document.getElementById('sumRows');sr.innerHTML='';
+  // Included cats
+  o.cats.filter(c=>!c.optional).forEach(c=>{const r=document.createElement('div');r.className='srow';r.innerHTML=`<span class="sl">${esc(c.n)}</span><span class="sv">${fmt(calcCat(c,pax))}</span>`;sr.appendChild(r);});
+  // Optional cats (shown separately, greyed out)
+  const optCats=o.cats.filter(c=>c.optional&&c.items.some(i=>i.n));
+  if(optCats.length){
+    const sep=document.createElement('div');sep.style.cssText='font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;padding:6px 0 3px;border-top:1px dashed var(--bd2);margin-top:4px';
+    sep.innerHTML='<span class="t-en">Optional (not included)</span><span class="t-zh"> 可选项目（不计入总价）</span><span class="t-ja"> オプション（合計外）</span>';
+    sr.appendChild(sep);
+    optCats.forEach(c=>{
+      const rawOpt=c.items.reduce((s,i)=>s+(c.pp?i.c*i.q*pax:i.c*i.q),0);
+      const qOpt=Math.round(rawOpt*(1+(o.markup||0)/100));
+      const r=document.createElement('div');r.className='srow';
+      r.style.cssText='color:var(--mu);font-style:italic';
+      r.innerHTML=`<span class="sl" style="color:var(--mu)">${esc(c.n)}</span><span class="sv" style="color:#856404">${fmt(qOpt)} <span style="font-size:9px">(opt)</span></span>`;
+      sr.appendChild(r);
+    });
+  }
+  const dr=document.createElement('div');dr.className='srow';dr.style.cssText='border-top:1px solid var(--bd);padding-top:5px;margin-top:3px;font-weight:700';
+  dr.innerHTML=`<span class="sl" style="font-weight:700"><span class="t-en">Net Cost</span><span class="t-zh">净成本</span><span class="t-ja">純コスト</span></span><span class="sv">${fmt(net)}</span>`;sr.appendChild(dr);
+  document.getElementById('tG').textContent=fmt(q);document.getElementById('tP').textContent=fmt(pp);
+  document.getElementById('tPr').textContent=fmt(q-net);document.getElementById('tMk').textContent='('+mk+'%)';
+  const db=document.getElementById('detB');db.innerHTML='';
+  o.cats.forEach(cat=>{cat.items.forEach(it=>{if(!it.n)return;const n2=cat.pp?it.c*it.q*pax:it.c*it.q;const q2=n2*(1+mk/100);const tr=document.createElement('tr');tr.innerHTML=`<td style="padding:3px">${esc(it.n)}${cat.pp?' (×'+pax+'p)':''}</td><td style="text-align:right;padding:3px;font-variant-numeric:tabular-nums">${fmt(n2)}</td><td style="text-align:right;padding:3px;font-weight:600;font-variant-numeric:tabular-nums">${fmt(q2)}</td>`;db.appendChild(tr);});});
+  const tf=document.createElement('tr');tf.style.cssText='border-top:2px solid var(--bd);font-weight:700';tf.innerHTML=`<td style="padding:4px">合計</td><td style="text-align:right;padding:4px">${fmt(net)}</td><td style="text-align:right;padding:4px">${fmt(q)}</td>`;db.appendChild(tf);
+  // itin overview
+  const io=document.getElementById('itOv');syncDays();const itin=co().itin.slice(0,co().days||5);
+  if(itin.every(d=>d.slots.every(s=>!s.n))){io.innerHTML='<div class="empty">行程尚未填写</div>';return;}
+  io.innerHTML='';
+  itin.forEach((day,i)=>{const p=document.createElement('div');p.style.marginBottom='11px';
+    p.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--P);margin-bottom:4px">DAY ${i+1}${day.title&&day.title!=='Day '+(i+1)?' — '+day.title:''}</div>`+
+    day.slots.filter(s=>s.n).map(s=>`<div style="display:flex;gap:5px;font-size:10px;margin-bottom:2px;padding:2px 6px;background:${TCLR[s.type]||'#fafafa'};border-radius:3px"><span style="color:var(--li);min-width:32px">${s.t||''}</span><span style="color:var(--mu);min-width:34px">${transType(s.type,uiLang())}</span><span style="font-weight:500">${esc(s.n)}</span></div>`).join('');
+    io.appendChild(p);
+  });
+}
+
+// ══════════ COMPARE ══════════
+function renderCmp(){
+  const el=document.getElementById('cmpC');
+  if(opts.length<2){el.innerHTML='<div class="empty">Add a second option to compare</div>';return;}
+  let h=`<table class="admin-tbl"><thead><tr><th style="text-align:left">方案</th><th style="text-align:right">净成本</th><th style="text-align:right">报价总价</th><th style="text-align:right">人均</th><th style="text-align:right">利润率</th><th style="text-align:right"><span class="t-en">Pax</span><span class="t-zh">人数</span><span class="t-ja">人数</span></th><th style="text-align:right">天数</th></tr></thead><tbody>`;
+  opts.forEach((o,i)=>{const n=calcNet(o);const q=calcQ(o);h+=`<tr${i===curOI?' style="background:#f0f7ff;font-weight:700"':''}><td>${esc(o.name)}</td><td style="text-align:right">${fmt(n)}</td><td style="text-align:right">${fmt(q)}</td><td style="text-align:right">${fmt(q/o.pax)}</td><td style="text-align:right">${o.markup}%</td><td style="text-align:right">${o.pax}p</td><td style="text-align:right">${o.days}D</td></tr>`;});
+  h+='</tbody></table>';
+  const allCats=[...new Set(opts.flatMap(o=>o.cats.map(c=>c.n)))];
+  h+=`<table class="admin-tbl" style="margin-top:14px"><thead><tr><th style="text-align:left">类别</th>${opts.map(o=>`<th style="text-align:right">${esc(o.name)}</th>`).join('')}</tr></thead><tbody>`;
+  allCats.forEach(cn=>{h+=`<tr><td style="color:var(--mu)">${esc(cn)}</td>${opts.map(o=>{const c=o.cats.find(x=>x.n===cn);return`<td style="text-align:right">${c?fmt(calcCat(c,o.pax)):'—'}</td>`;}).join('')}</tr>`;});
+  h+=`<tr style="font-weight:700;border-top:2px solid var(--bd)"><td>净成本合计</td>${opts.map(o=>`<td style="text-align:right">${fmt(calcNet(o))}</td>`).join('')}</tr></tbody></table>`;
+  el.innerHTML=h;
+}
+
+// ══════════ CLOUD ══════════
+// ── SAVE & EXPORT (Google Drive workflow) ──
+async function cloudSave(){
+  const url=cfg.url;
+  if(!url){
+    // No URL: just save locally + export
+    localSave();expExcel();
+    const b=document.querySelector('.cloud-b');
+    b.textContent='💾 Saved locally';
+    setTimeout(()=>b.textContent='📤 Export & Save / 导出保存',2500);
+    return;
+  }
+  updateSyncUI('busy');
+  try{
+    const o=co();const quoteId=o._cloudId||genId();o._cloudId=quoteId;
+    const payload={action:'saveQuote',quoteId,operator:cfg.op||'未知',opt:o,allOpts:opts,currency:cur,status:o._status||'草稿'};
+    const res=await fetch(url,{method:'POST',mode:'no-cors',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}});
+    localSave();
+    updateSyncUI('ok');setTimeout(()=>updateSyncUI('idle'),3000);
+    const b=document.querySelector('.cloud-b');
+    b.textContent='☁ Saved to Cloud ✓';
+    setTimeout(()=>b.textContent='☁ Save to Cloud / 保存云端',2500);
+  }catch(e){updateSyncUI('err');alert('Sync failed: '+e.message);}
+}
+
+async function loadCloud(){
+  const url=cfg.url;
+  if(!url){loadFromLocalHistory();renderAdmin();return;}
+  updateSyncUI('busy');
+  try{
+    const r=await gasGet(url,{action:'getQuotes'});
+    if(!r||!r.success)throw new Error((r&&r.error)||'failed');
+    allQuotes=r.quotes||[];
+    updateSyncUI('ok');setTimeout(()=>updateSyncUI('idle'),2000);
+    renderAdmin();renderStats();
+  }catch(e){
+    loadFromLocalHistory();
+    updateSyncUI('err');
+    setTimeout(()=>updateSyncUI('idle'),2000);
+    renderAdmin();
+  }
+}
+
+async function updateStatus(id,status){
+  const url=cfg.url;
+  try{
+    if(url) await fetch(url,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'updateStatus',id,status}),headers:{'Content-Type':'text/plain'}});
+    const q=allQuotes.find(x=>x['ID']===id);if(q)q['状态']=status;
+  }catch(e){console.warn(e);}
+}
+
+async function deleteQuote(id){
+  if(!confirm('Delete this quote? / 确定删除？'))return;
+  const url=cfg.url;
+  try{
+    if(url) await fetch(url,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'deleteQuote',id}),headers:{'Content-Type':'text/plain'}});
+    allQuotes=allQuotes.filter(q=>q['ID']!==id);
+    // Remove from local history too
+    const hist=JSON.parse(localStorage.getItem('ajd_hist')||'[]');
+    localStorage.setItem('ajd_hist',JSON.stringify(hist.filter(h=>!JSON.stringify(h).includes(id))));
+    renderAdmin();renderStats();
+  }catch(e){alert('Delete failed: '+e.message);}
+}
+
+function gasGet(url, params){
+  // Use script tag injection to bypass CORS for file:// origins
+  return new Promise((resolve, reject)=>{
+    const cbName='_gas_cb_'+Date.now();
+    const qs=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+    const fullUrl=url+'?'+qs+'&callback='+cbName;
+    window[cbName]=function(data){
+      delete window[cbName];
+      document.getElementById('_gas_script_').remove();
+      resolve(data);
+    };
+    const s=document.createElement('script');
+    s.id='_gas_script_';
+    s.onerror=()=>{delete window[cbName];reject(new Error('Script load failed'));};
+    s.src=fullUrl;
+    document.head.appendChild(s);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];reject(new Error('Timeout'));}},8000);
+  });
+}
+
+async function testConn(){
+  const el=document.getElementById('connResult');
+  const url=v('cfg_url');
+  if(!url){
+    el.innerHTML='<span class="conn-dot" style="background:#888"></span> No URL — using local mode';
+    return;
+  }
+  el.innerHTML='<span class="sp">⟳</span> Testing…';
+  try{
+    const d=await gasGet(url,{action:'ping'});
+    if(d && d.success){
+      el.innerHTML='<span class="conn-dot conn-ok"></span> Connected ✓';
+      cfg.url=url;localStorage.setItem('ajd_cfg',JSON.stringify(cfg));
+      updateSyncUI('idle');
+    }else throw new Error((d&&d.error)||'No response');
+  }catch(e){
+    el.innerHTML='<span class="conn-dot conn-err"></span> '+e.message;
+  }
+}
+
+
+function loadFromLocalHistory(){
+  const hist=JSON.parse(localStorage.getItem('ajd_hist')||'[]');
+  // Convert history entries to quote records for admin view
+  allQuotes=[];
+  hist.slice().reverse().forEach((h,i)=>{
+    if(!h.opts)return;
+    h.opts.forEach(o=>{
+      const pax=o.pax||1;const mk=o.markup||0;
+      let net=0;
+      (o.cats||[]).forEach(cat=>{(cat.items||[]).forEach(it=>{net+=cat.pp?it.c*it.q*pax:it.c*it.q;});});
+      const q=net*(1+mk/100);
+      allQuotes.push({
+        'ID': o._cloudId||o.id||('L'+(hist.length-i)),
+        '保存时间': h.date||'',
+        '操作人': h.operator||cfg.op||'—',
+        '客户名称': o.clientName||'',
+        '旅行类型': o.tourType||'',
+        '目的地': o.dest||'',
+        '出发日期': o.startDate||'',
+        '天数': o.days||0,
+        '人数': o.pax||0,
+        '报价方案': o.name||'',
+        '货币': h.cur||'JPY',
+        '净成本': Math.round(net),
+        '报价总价': Math.round(q),
+        '人均报价': Math.round(q/pax),
+        'Markup%': mk,
+        '预计利润': Math.round(q-net),
+        '状态': o._status||'草稿',
+        '完整数据JSON': JSON.stringify(h.opts)
+      });
+    });
+  });
+}
+
+function updateCatTotal(cid){
+  // Update just the total display for one category without rebuilding DOM
+  const o=co();
+  const cat=o.cats.find(c=>c.id===cid);
+  if(!cat)return;
+  const tot=calcCat(cat,o.pax);
+  // Find the total span for this cat - we tag it with data-catid
+  const span=document.querySelector('.ct[data-catid="'+cid+'"]');
+  if(span)span.textContent=fmt(tot);
+}
+
+// ── NOTES & POLICY ──
+function insertNoteTemplate(type){
+  const o=co();
+  const el=document.getElementById('proposalNotes');
+  if(!el)return;
+  const tpl=type==='inclusions'?getDefaultNotes(o.pax||30):getDefaultNotes(o.pax||30).replace('INCLUSIONS:','GENERAL NOTES:');
+  const sep=el.value?'\n\n':'';
+  el.value=el.value+sep+(type==='inclusions'?getDefaultNotes(o.pax||30):
+    `・All prices are based on ${o.pax||30} persons travelling together\n・Prices are subject to change due to availability and seasonality\n・This quotation is valid for 14 days from the date of issue\n・Hotel rooms are based on twin/double sharing`);
+  so('notes',el.value);
+}
+
+function resetPolicies(){
+  const o=co();
+  o.notes=getDefaultNotes(o.pax||30);
+  o.cancellation=getDefaultCancellation();
+  o.payment=getDefaultPayment(cur);
+  const pn=document.getElementById('proposalNotes');if(pn)pn.value=o.notes;
+  const cp=document.getElementById('cancellationPolicy');if(cp)cp.value=o.cancellation;
+  const pp=document.getElementById('paymentPolicy');if(pp)pp.value=o.payment;
+}
+
+
+// ── TIERED PRICING ──
+function addTier(){
+  const o=co();
+  if(!o.tiers)o.tiers=[10,15,20,25,30];
+  const last=o.tiers[o.tiers.length-1]||30;
+  o.tiers.push(last+5);
+  renderTiers();
+}
+
+function removeTier(i){
+  const o=co();
+  if(!o.tiers||o.tiers.length<=1)return;
+  o.tiers.splice(i,1);
+  renderTiers();
+}
+
+function updateTier(i,val){
+  const o=co();
+  if(!o.tiers)return;
+  o.tiers[i]=parseInt(val)||1;
+  renderTiers();
+}
+
+function calcTierData(o){
+  const tiers=o.tiers&&o.tiers.length?o.tiers:[o.pax||30];
+  return tiers.map(pax=>{
+    let net=0;
+    (o.cats||[]).forEach(cat=>{
+      (cat.items||[]).forEach(it=>{
+        net+=cat.pp?it.c*it.q*pax:it.c*it.q;
+      });
+    });
+    const q=Math.round(net*(1+(o.markup||0)/100));
+    return{pax,net:Math.round(net),quote:q,perPax:Math.round(q/(pax||1))};
+  });
+}
+
+function renderTiers(){
+  const el=document.getElementById('tierTable');
+  if(!el)return;
+  const o=co();
+  if(!o.tiers||!o.tiers.length)o.tiers=[10,15,20,25,30];
+  const tiers=calcTierData(o);
+  el.innerHTML='';
+
+  // header row
+  const hdr=document.createElement('tr');
+  hdr.style.cssText='border-bottom:2px solid var(--bd)';
+  ['Pax','Per Pax ('+cur+')','Group Total',''].forEach(h=>{
+    const th=document.createElement('th');
+    th.textContent=h;
+    th.style.cssText='padding:4px 6px;text-align:'+(h==='Pax'?'left':'right')+';color:var(--mu);font-weight:600;font-size:10px';
+    hdr.appendChild(th);
+  });
+  el.appendChild(hdr);
+
+  tiers.forEach((t,i)=>{
+    const isBase=t.pax===o.pax;
+    const tr=document.createElement('tr');
+    tr.style.cssText='border-bottom:1px solid var(--bd2);'+(isBase?'background:#e8f5ee;':'');
+
+    // pax input cell
+    const tdPax=document.createElement('td');
+    tdPax.style.cssText='padding:5px 6px';
+    tdPax.innerHTML=`<div style="display:flex;align-items:center;gap:4px">
+      <input type="number" value="${t.pax}" min="1" style="width:52px;font-size:11px;text-align:center;border:1px solid var(--bd);border-radius:3px;padding:2px 4px;font-family:inherit" onchange="updateTier(${i},this.value)">
+      ${isBase?'<span style="font-size:9px;color:var(--ok);font-weight:700">★</span>':''}
+    </div>`;
+
+    // per pax cell
+    const tdPP=document.createElement('td');
+    tdPP.style.cssText='padding:5px 8px;text-align:right;font-weight:'+(isBase?'700':'500')+';font-variant-numeric:tabular-nums;color:var(--P)';
+    tdPP.textContent=fmt(t.perPax);
+
+    // group total cell
+    const tdGT=document.createElement('td');
+    tdGT.style.cssText='padding:5px 8px;text-align:right;font-variant-numeric:tabular-nums;color:var(--mu)';
+    tdGT.textContent=fmt(t.quote);
+
+    // delete cell
+    const tdDel=document.createElement('td');
+    tdDel.style.cssText='padding:5px 4px;text-align:center';
+    tdDel.innerHTML=`<button class="xb" onclick="removeTier(${i})" style="width:18px;height:18px;font-size:11px">×</button>`;
+
+    tr.appendChild(tdPax);tr.appendChild(tdPP);tr.appendChild(tdGT);tr.appendChild(tdDel);
+    el.appendChild(tr);
+  });
+}
+
+// ── SLOT DRAG & DROP ──
+let dragSrcDi=-1,dragSrcSi=-1;
+function slotDragStart(e,di,si){
+  dragSrcDi=di;dragSrcSi=si;
+  e.dataTransfer.effectAllowed='move';
+  e.currentTarget.style.opacity='.4';
+}
+function slotDragOver(e,di,si){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  // Highlight drop target
+  document.querySelectorAll('.sr').forEach(el=>el.style.borderTop='');
+  if(!(di===dragSrcDi&&si===dragSrcSi)){
+    const el=document.getElementById('slot-'+di+'-'+si);
+    if(el)el.style.borderTop='2px solid var(--A2)';
+  }
+  return false;
+}
+function slotDrop(e,di,si){
+  e.stopPropagation();
+  if(dragSrcDi===di&&dragSrcSi===si)return;
+  const slots=co().itin[di].slots;
+  // Only allow drag within same day
+  if(dragSrcDi!==di)return;
+  const moved=slots.splice(dragSrcSi,1)[0];
+  const newSi=si>dragSrcSi?si-1:si;
+  slots.splice(newSi,0,moved);
+  render();
+  return false;
+}
+function slotDragEnd(e){
+  document.querySelectorAll('.sr').forEach(el=>{el.style.opacity='';el.style.borderTop='';});
+  dragSrcDi=-1;dragSrcSi=-1;
+}
+
+
+function render(){renderOptBar();if(view==='q')renderCats();if(view==='i')renderDays();renderRight();}
+
+// ══════════ EXPORT HELPERS ══════════
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Translate slot type based on export language
+const SLOT_TYPE_TRANS={
+  '景点':  {en:'Attraction', zh:'景点', ja:'観光'},
+  '餐厅':  {en:'Restaurant', zh:'餐厅', ja:'レストラン'},
+  '交通':  {en:'Transport',  zh:'交通', ja:'交通'},
+  '住宿':  {en:'Hotel',      zh:'住宿', ja:'宿泊'},
+  '活动':  {en:'Activity',   zh:'活动', ja:'アクティビティ'},
+  '自由时间':{en:'Free Time', zh:'自由时间', ja:'自由時間'},
+  '其他':  {en:'Other',      zh:'其他', ja:'その他'},
+};
+function transType(type, l){
+  const t=SLOT_TYPE_TRANS[type];
+  if(!t)return type;
+  return t[l]||t.en||type;
+}
+
+// ══════════ EXPORT: WORD QUOTE ══════════
+async function expWord(){
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,AlignmentType,WidthType,BorderStyle,ShadingType}=docx;
+  const o=co();const pax=o.pax||1;const mk=o.markup||0;const net=calcNet(o);const q=calcQ(o);const W=9026;
+  const L=uiLang();
+  const cb={style:BorderStyle.SINGLE,size:1,color:'DDDDDD'};const brd={top:cb,bottom:cb,left:cb,right:cb};const cm={top:80,bottom:80,left:120,right:120};
+  const tx=(t,op={})=>new TextRun({text:String(t),font:'Arial',size:op.sz||20,...op});
+  const p=(ch,op={})=>new Paragraph({children:ch,alignment:op.al||AlignmentType.LEFT,spacing:op.sp?{before:op.sp,after:op.sp}:{after:op.after||0}});
+  const cl=(t,w,op={})=>new TableCell({width:{size:w,type:WidthType.DXA},borders:brd,margins:cm,shading:op.f?{fill:op.f,type:ShadingType.CLEAR}:{},children:[p([tx(t,{bold:op.b,color:op.c||'000000',size:op.sz||20})],{al:op.r?AlignmentType.RIGHT:AlignmentType.LEFT})]});
+
+  // Cost rows (excluded optional)
+  const rows=[];
+  o.cats.filter(c=>!c.optional).forEach(cat=>{
+    rows.push(new TableRow({children:[new TableCell({columnSpan:4,width:{size:W,type:WidthType.DXA},borders:brd,margins:cm,shading:{fill:'f0efe9',type:ShadingType.CLEAR},children:[p([tx(cat.n,{bold:true,color:'1a2744'})])]})]}));
+    cat.items.forEach(it=>{if(!it.n)return;const n2=cat.pp?it.c*it.q*pax:it.c*it.q;const q2=n2*(1+mk/100);rows.push(new TableRow({children:[cl(it.n+(cat.pp?' (×'+pax+'pax)':''),4500),cl(fmt(it.c)+'/'+(cat.pp?'人':'式'),1426,{r:true}),cl(fmt(n2),1550,{r:true}),cl(fmt(q2),1550,{r:true,b:true,f:'f0f7ff'})]}));});
+  });
+  rows.push(new TableRow({children:[cl(L==='zh'?'合计 Grand Total':L==='ja'?'合計 Grand Total':'Grand Total',4500,{b:true,f:'e8ecf5'}),cl('',1426,{f:'e8ecf5'}),cl(fmt(net),1550,{r:true,b:true,f:'e8ecf5'}),cl(fmt(q),1550,{r:true,b:true,f:'1a2744',c:'FFFFFF'})]}));
+
+  // Tiered pricing table
+  const td=calcTierData(o);const cw=Math.floor((W-2200)/td.length);
+  const tierTbl=new Table({width:{size:W,type:WidthType.DXA},columnWidths:[2200,...td.map(()=>cw)],rows:[
+    new TableRow({tableHeader:true,children:[cl(L==='zh'?'档位':L==='ja'?'人数':'Pax',2200,{b:true,f:'1a2744',c:'FFFFFF'}),...td.map(t=>cl(t.pax+' pax',cw,{b:true,r:true,f:t.pax===o.pax?'c8a96e':'1a2744',c:'FFFFFF'}))]}),
+    new TableRow({children:[cl(L==='zh'?'人均报价':L==='ja'?'一人当たり':'Per Pax ('+cur+')',2200,{b:true,f:'f0efe9'}),...td.map(t=>cl(fmt(t.perPax),cw,{r:true,b:t.pax===o.pax,f:t.pax===o.pax?'e8f5ee':''}))]}),
+    new TableRow({children:[cl(L==='zh'?'团体总价':L==='ja'?'グループ合計':'Group Total ('+cur+')',2200,{b:true,f:'f0efe9'}),...td.map(t=>cl(fmt(t.quote),cw,{r:true,f:t.pax===o.pax?'e8f5ee':''}))]}),
+  ]});
+
+  // Optional items
+  const optCats=o.cats.filter(c=>c.optional&&c.items.some(i=>i.n));
+  const optSection=[];
+  if(optCats.length){
+    const optLabel=L==='zh'?'可选项目（不计入报价）':L==='ja'?'オプション項目（見積外）':'OPTIONAL ITEMS (not included in quote)';
+    const optRows=[];
+    optCats.forEach(cat=>{cat.items.filter(i=>i.n).forEach(it=>{const n2=cat.pp?it.c*it.q*pax:it.c*it.q;const q2=Math.round(n2*(1+mk/100));optRows.push(new TableRow({children:[cl(it.n+(cat.pp?' (×'+pax+'pax)':''),5500,{sz:18}),cl(fmt(q2),1763,{r:true,sz:18,color:'856404'}),cl(L==='zh'?'可选':L==='ja'?'オプション':'Optional',1763,{r:true,sz:16,color:'856404'})]}));});});
+    optSection.push(p([tx(optLabel,{bold:true,size:20,color:'856404'})],{sp:260}));
+    optSection.push(new Table({width:{size:W,type:WidthType.DXA},columnWidths:[5500,1763,1763],rows:[new TableRow({tableHeader:true,children:[cl(L==='zh'?'项目':L==='ja'?'項目':'Item',5500,{b:true,f:'856404',c:'FFFFFF',sz:18}),cl(L==='zh'?'参考报价':L==='ja'?'参考見積':'Reference Price',1763,{b:true,f:'856404',c:'FFFFFF',r:true,sz:16}),cl('',1763,{f:'856404'})]}),...optRows]}));
+  }
+
+  const doc2=new Document({styles:{default:{document:{run:{font:'Arial',size:20}}}},sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1100,right:1100,bottom:1100,left:1100}}},children:[
+    p([tx(cfg.co||'ALL JAPAN DMC 株式会社',{bold:true,size:32,color:'1a2744'})]),
+    p([tx(cfg.addr||'',{size:16,color:'888888'})]),
+    p([tx((cfg.email||'')+'  |  '+(cfg.web||''),{size:16,color:'888888'})],{after:160}),
+    new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'c8a96e',space:1}},spacing:{after:280},children:[tx('')]}),
+    p([tx(L==='zh'?'旅行费用报价书':L==='ja'?'旅行費用見積書':'TOUR QUOTATION',{bold:true,size:28,color:'1a2744'})],{after:200}),
+    new Table({width:{size:W,type:WidthType.DXA},columnWidths:[2600,6426],rows:[
+      new TableRow({children:[cl('Client',2600,{b:true,f:'f0efe9'}),cl(o.clientName||'—',6426)]}),
+      new TableRow({children:[cl('Tour Type',2600,{b:true,f:'f0efe9'}),cl(o.tourType,6426)]}),
+      new TableRow({children:[cl('Destination',2600,{b:true,f:'f0efe9'}),cl(o.dest||'—',6426)]}),
+      new TableRow({children:[cl('Period',2600,{b:true,f:'f0efe9'}),cl((o.startDate||'TBC')+' · '+o.days+'D/'+(o.days-1)+'N',6426)]}),
+      new TableRow({children:[cl('Pax',2600,{b:true,f:'f0efe9'}),cl(o.pax+' persons',6426)]}),
+      new TableRow({children:[cl('Option',2600,{b:true,f:'f0efe9'}),cl(o.name+(o.optNote?' — '+o.optNote:''),6426)]}),
+    ]}),
+    p([tx(L==='zh'?'费用明细':L==='ja'?'費用内訳':'COST BREAKDOWN',{bold:true,size:22,color:'1a2744'})],{sp:260}),
+    new Table({width:{size:W,type:WidthType.DXA},columnWidths:[4500,1426,1550,1550],rows:[new TableRow({tableHeader:true,children:[cl(L==='zh'?'项目':L==='ja'?'項目':'Item',4500,{b:true,f:'1a2744',c:'FFFFFF'}),cl(L==='zh'?'单价':'単価',1426,{b:true,f:'1a2744',c:'FFFFFF',r:true}),cl('NET ('+cur+')',1550,{b:true,f:'1a2744',c:'FFFFFF',r:true}),cl('QUOTE ('+cur+')',1550,{b:true,f:'1a2744',c:'FFFFFF',r:true})]}),...rows]}),
+    p([tx(L==='zh'?'合计':L==='ja'?'合計':'SUMMARY',{bold:true,size:22,color:'1a2744'})],{sp:260}),
+    new Table({width:{size:W,type:WidthType.DXA},columnWidths:[4000,2513,2513],rows:[
+      new TableRow({children:[cl(L==='zh'?'团体合计':L==='ja'?'グループ合計':'Group Total',4000,{b:true,f:'f0efe9'}),cl('NET: '+fmt(net),2513,{r:true}),cl('QUOTE: '+fmt(q),2513,{r:true,b:true,f:'dce8f5'})]}),
+      new TableRow({children:[cl(L==='zh'?'人均':'一人当たり',4000,{b:true,f:'f0efe9'}),cl('',2513),cl(fmt(q/pax),2513,{r:true,b:true,f:'dce8f5'})]}),
+    ]}),
+    p([tx(L==='zh'?'阶梯报价':L==='ja'?'段階見積':'TIERED PRICING',{bold:true,size:22,color:'1a2744'})],{sp:260}),
+    tierTbl,
+    ...optSection,
+    p([tx(L==='zh'?'备注':L==='ja'?'備考':'NOTES',{bold:true,size:20,color:'1a2744'})],{sp:260}),
+    p([tx('・'+new Date().toLocaleDateString('ja-JP')+'時点の情報に基づきます。',{size:18,color:'666666'})]),
+    p([tx('・料金は'+cur+'建てです。',{size:18,color:'666666'})]),
+    p([tx((cfg.contact||'ALL JAPAN DMC')+' までお問い合わせください。',{size:18,color:'666666'})]),
+  ]}]});
+  dl(await Packer.toBlob(doc2),(o.clientName||'Quote').replace(/\s/g,'_')+'_'+o.name+'_AJD.docx');
+}
+
+// ══════════ EXPORT: WORD ITINERARY ══════════
+async function expWordIt(){
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,AlignmentType,WidthType,BorderStyle,ShadingType}=docx;
+  const o=co();const W=9026;const L=uiLang();syncDays();const itin=o.itin.slice(0,o.days||5);
+  const cb={style:BorderStyle.SINGLE,size:1,color:'E0E0E0'};const brd={top:cb,bottom:cb,left:cb,right:cb};const cm={top:70,bottom:70,left:100,right:100};
+  const tx=(t,op={})=>new TextRun({text:String(t),font:'Arial',size:op.sz||20,...op});
+  const p=(ch,op={})=>new Paragraph({children:ch,alignment:op.al||AlignmentType.LEFT,spacing:op.sp?{before:op.sp,after:op.sp}:{}});
+  const TF={景点:'E8F0F8',餐厅:'FEF3E2',交通:'F0F0F0',住宿:'E8F8EE',活动:'F3E8F8','自由时间':'FAFAFA',其他:'FAFAFA'};
+  const ch=[
+    p([tx(cfg.co||'ALL JAPAN DMC',{bold:true,size:28,color:'1a2744'})]),
+    p([tx(cfg.addr||'',{size:16,color:'888888'})],{sp:100}),
+    new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'c8a96e',space:1}},spacing:{after:300},children:[tx('')]}),
+    p([tx(L==='zh'?'旅行行程表':L==='ja'?'旅行日程表':'TOUR ITINERARY',{bold:true,size:28,color:'1a2744'})]),
+    p([tx('Client: '+(o.clientName||'—')+'   Destination: '+(o.dest||'—')+'   '+o.days+'D/'+(o.days-1)+'N   '+o.pax+'pax',{size:18,color:'555555'})],{sp:200}),
+  ];
+  itin.forEach((day,i)=>{
+    ch.push(new Paragraph({pageBreakBefore:i>0,spacing:{after:200},children:[tx('DAY '+(i+1)+(day.title&&day.title!=='Day '+(i+1)?' — '+day.title:'')+(day.date?' ('+day.date+')':''),{bold:true,size:24,color:'1a2744'})]}));
+    const dr=day.slots.filter(s=>s.n).map(sl=>new TableRow({children:[
+      new TableCell({width:{size:800,type:WidthType.DXA},borders:brd,margins:cm,children:[p([tx(sl.t||'',{sz:18,color:'666666'})])]}),
+      new TableCell({width:{size:1000,type:WidthType.DXA},borders:brd,margins:cm,shading:{fill:TF[sl.type]||'FAFAFA',type:ShadingType.CLEAR},children:[p([tx(transType(sl.type,L),{sz:18,bold:true})])]}),
+      new TableCell({width:{size:4726,type:WidthType.DXA},borders:brd,margins:cm,children:[p([tx(sl.n||'',{sz:20,bold:true})])]}),
+      new TableCell({width:{size:2500,type:WidthType.DXA},borders:brd,margins:cm,children:[p([tx(sl.note||'',{sz:16,color:'888888'})])]}),
+    ]}));
+    if(dr.length)ch.push(new Table({width:{size:W,type:WidthType.DXA},columnWidths:[800,1000,4726,2500],rows:[new TableRow({tableHeader:true,children:[800,1000,4726,2500].map((w,wi)=>new TableCell({width:{size:w,type:WidthType.DXA},borders:brd,margins:cm,shading:{fill:'1a2744',type:ShadingType.CLEAR},children:[p([tx([L==='ja'?'時間':'Time',L==='ja'?'種類':'Type',L==='ja'?'内容':'Content',L==='ja'?'備考':'Remarks'][wi],{bold:true,color:'FFFFFF',sz:16})])]}))})],...dr}));
+    else ch.push(p([tx('(TBD)',{sz:18,color:'aaaaaa'})],{sp:100}));
+  });
+  ch.push(new Paragraph({spacing:{before:400},border:{top:{style:BorderStyle.SINGLE,size:4,color:'c8a96e',space:1}},children:[tx('')]}));
+  ch.push(p([tx(cfg.contact||'ALL JAPAN DMC',{sz:18,color:'444444'})],{sp:100}));
+  const doc2=new Document({styles:{default:{document:{run:{font:'Arial',size:20}}}},sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1100,right:1100,bottom:1100,left:1100}}},children:ch}]});
+  dl(await Packer.toBlob(doc2),(o.clientName||'Tour').replace(/\s/g,'_')+'_Itinerary_AJD.docx');
+}
+
+// ══════════ EXPORT: WORD FULL PROPOSAL (Quote + Itinerary) ══════════
+async function expWordFull(){
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,AlignmentType,WidthType,BorderStyle,ShadingType}=docx;
+  const o=co();const pax=o.pax||1;const mk=o.markup||0;const net=calcNet(o);const q=calcQ(o);const W=9026;const L=uiLang();
+  syncDays();const itin=o.itin.slice(0,o.days||5);
+  const cb={style:BorderStyle.SINGLE,size:1,color:'DDDDDD'};const brd={top:cb,bottom:cb,left:cb,right:cb};const cm={top:80,bottom:80,left:120,right:120};
+  const icb={style:BorderStyle.SINGLE,size:1,color:'E0E0E0'};const ibrd={top:icb,bottom:icb,left:icb,right:icb};const icm={top:70,bottom:70,left:100,right:100};
+  const tx=(t,op={})=>new TextRun({text:String(t),font:'Arial',size:op.sz||20,...op});
+  const p=(ch,op={})=>new Paragraph({children:ch,alignment:op.al||AlignmentType.LEFT,spacing:op.sp?{before:op.sp,after:op.sp}:{after:op.after||0}});
+  const cl=(t,w,op={})=>new TableCell({width:{size:w,type:WidthType.DXA},borders:brd,margins:cm,shading:op.f?{fill:op.f,type:ShadingType.CLEAR}:{},children:[p([tx(t,{bold:op.b,color:op.c||'000000',size:op.sz||20})],{al:op.r?AlignmentType.RIGHT:AlignmentType.LEFT})]});
+  const TF={景点:'E8F0F8',餐厅:'FEF3E2',交通:'F0F0F0',住宿:'E8F8EE',活动:'F3E8F8','自由时间':'FAFAFA',其他:'FAFAFA'};
+  const LABELS={
+    en:{title:'TOUR PROPOSAL',client:'Client',type:'Tour Type',dest:'Destination',period:'Period',pax:'Pax',option:'Option',
+        breakdown:'COST BREAKDOWN',item:'Item',net:'NET',quote:'QUOTE',grandtotal:'Grand Total',
+        grouptotal:'Group Total',perpax:'Per Person',summary:'COST SUMMARY',
+        itin:'TOUR ITINERARY',day:'DAY',time:'Time',type2:'Type',content:'Content',remarks:'Remarks',tbc:'TBD',
+        notes:'NOTES',cancel:'CANCELLATION POLICY',payment:'PAYMENT POLICY'},
+    zh:{title:'旅行提案书',client:'客户',type:'旅行类型',dest:'目的地',period:'行程期间',pax:'人数',option:'方案',
+        breakdown:'费用明细',item:'项目',net:'净价',quote:'报价',grandtotal:'合计',
+        grouptotal:'团体总价',perpax:'人均报价',summary:'费用合计',
+        itin:'行程安排',day:'第',time:'时间',type2:'类型',content:'内容',remarks:'备注',tbc:'待定',
+        notes:'备注',cancel:'取消政策',payment:'付款政策'},
+    ja:{title:'旅行提案書',client:'クライアント',type:'旅行タイプ',dest:'目的地',period:'旅行期間',pax:'人数',option:'プラン',
+        breakdown:'費用内訳',item:'項目',net:'NET',quote:'見積',grandtotal:'合計',
+        grouptotal:'グループ合計',perpax:'一人当たり',summary:'費用合計',
+        itin:'旅行日程',day:'DAY',time:'時間',type2:'種類',content:'内容',remarks:'備考',tbc:'未定',
+        notes:'備考',cancel:'キャンセルポリシー',payment:'支払いポリシー'},
+  };
+  const lb=LABELS[L]||LABELS.en;
+
+  // ── COVER ──
+  const children=[
+    p([tx(cfg.co||'ALL JAPAN DMC 株式会社',{bold:true,size:32,color:'1a2744'})]),
+    p([tx(cfg.addr||'',{size:16,color:'888888'})]),
+    p([tx((cfg.email||'')+'  |  '+(cfg.web||''),{size:16,color:'888888'})],{after:160}),
+    new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'c8a96e',space:1}},spacing:{after:280},children:[tx('')]}),
+    p([tx(lb.title,{bold:true,size:34,color:'1a2744'})],{after:200}),
+    new Table({width:{size:W,type:WidthType.DXA},columnWidths:[2600,6426],rows:[
+      new TableRow({children:[cl(lb.client,2600,{b:true,f:'f0efe9'}),cl(o.clientName||'—',6426)]}),
+      new TableRow({children:[cl(lb.type,2600,{b:true,f:'f0efe9'}),cl(o.tourType,6426)]}),
+      new TableRow({children:[cl(lb.dest,2600,{b:true,f:'f0efe9'}),cl(o.dest||'—',6426)]}),
+      new TableRow({children:[cl(lb.period,2600,{b:true,f:'f0efe9'}),cl((o.startDate||'TBC')+' · '+o.days+'D/'+(o.days-1)+'N',6426)]}),
+      new TableRow({children:[cl(lb.pax,2600,{b:true,f:'f0efe9'}),cl(o.pax+' persons',6426)]}),
+      new TableRow({children:[cl(lb.option,2600,{b:true,f:'f0efe9'}),cl(o.name+(o.optNote?' — '+o.optNote:''),6426)]}),
+    ]}),
+  ];
+
+  // ══ SECTION 1: ITINERARY ══
+  children.push(
+    new Paragraph({pageBreakBefore:true,spacing:{after:200},children:[tx(lb.itin,{bold:true,size:30,color:'1a2744'})]}),
+    p([tx((o.clientName||'')+(o.clientName?' | ':'')+o.dest+(o.dest?' | ':'')+o.days+'D/'+(o.days-1)+'N | '+o.pax+'pax',{size:18,color:'555555'})],{after:200}),
+  );
+  itin.forEach((day,i)=>{
+    const dl2=L==='zh'?'第'+(i+1)+'天':lb.day+' '+(i+1);
+    const dayT=day.title&&day.title!==('Day '+(i+1))?day.title:'';
+    children.push(p([tx(dl2+(dayT?' — '+dayT:'')+(day.date?' ('+day.date+')':''),{bold:true,size:24,color:'1a2744'})],{sp:200}));
+    const named=day.slots.filter(s=>s.n);
+    if(named.length){
+      const itRows=named.map(sl=>new TableRow({children:[
+        new TableCell({width:{size:700,type:WidthType.DXA},borders:ibrd,margins:icm,children:[p([tx(sl.t||'',{sz:18,color:'666666'})])]}),
+        new TableCell({width:{size:1000,type:WidthType.DXA},borders:ibrd,margins:icm,shading:{fill:TF[sl.type]||'FAFAFA',type:ShadingType.CLEAR},children:[p([tx(transType(sl.type,L),{sz:18,bold:true})])]}),
+        new TableCell({width:{size:5026,type:WidthType.DXA},borders:ibrd,margins:icm,children:[p([tx(sl.n||'',{sz:20,bold:true})])]}),
+        new TableCell({width:{size:2300,type:WidthType.DXA},borders:ibrd,margins:icm,children:[p([tx(sl.note||'',{sz:16,color:'888888'})])]}),
+      ]}));
+      const hdrW=[700,1000,5026,2300];
+      children.push(new Table({width:{size:W,type:WidthType.DXA},columnWidths:hdrW,rows:[
+        new TableRow({tableHeader:true,children:hdrW.map((w,wi)=>new TableCell({width:{size:w,type:WidthType.DXA},borders:ibrd,margins:icm,shading:{fill:'1a2744',type:ShadingType.CLEAR},children:[p([tx([lb.time,lb.type2,lb.content,lb.remarks][wi],{bold:true,color:'FFFFFF',sz:16})])]}))}),...itRows
+      ]}));
+    }else{children.push(p([tx('（'+lb.tbc+'）',{sz:18,color:'aaaaaa'})],{after:100}));}
+  });
+
+  // ══ SECTION 2: PRICING ══
+  const costRows=[];
+  o.cats.filter(c=>!c.optional).forEach(cat=>{
+    costRows.push(new TableRow({children:[new TableCell({columnSpan:4,width:{size:W,type:WidthType.DXA},borders:brd,margins:cm,shading:{fill:'f0efe9',type:ShadingType.CLEAR},children:[p([tx(cat.n,{bold:true,color:'1a2744'})])]})]}));
+    cat.items.forEach(it=>{if(!it.n)return;const n2=cat.pp?it.c*it.q*pax:it.c*it.q;const q2=n2*(1+mk/100);costRows.push(new TableRow({children:[cl(it.n+(cat.pp?' (x'+pax+'pax)':''),4500),cl(fmt(it.c)+'/'+(cat.pp?'pp':'式'),1426,{r:true}),cl(fmt(n2),1550,{r:true}),cl(fmt(q2),1550,{r:true,b:true,f:'f0f7ff'})]}));});
+  });
+  costRows.push(new TableRow({children:[cl(lb.grandtotal,4500,{b:true,f:'e8ecf5'}),cl('',1426,{f:'e8ecf5'}),cl(fmt(net),1550,{r:true,b:true,f:'e8ecf5'}),cl(fmt(q),1550,{r:true,b:true,f:'1a2744',c:'FFFFFF'})]}));
+
+  const td=calcTierData(o);const cw=Math.floor((W-2200)/td.length);
+  const tierTbl=new Table({width:{size:W,type:WidthType.DXA},columnWidths:[2200,...td.map(()=>cw)],rows:[
+    new TableRow({tableHeader:true,children:[cl(lb.pax,2200,{b:true,f:'1a2744',c:'FFFFFF'}),...td.map(t=>cl(t.pax+' pax',cw,{b:true,r:true,f:t.pax===o.pax?'c8a96e':'1a2744',c:'FFFFFF'}))]}),
+    new TableRow({children:[cl(lb.perpax+' ('+cur+')',2200,{b:true,f:'f0efe9'}),...td.map(t=>cl(fmt(t.perPax),cw,{r:true,b:t.pax===o.pax,f:t.pax===o.pax?'e8f5ee':''}))]}),
+    new TableRow({children:[cl(lb.grouptotal+' ('+cur+')',2200,{b:true,f:'f0efe9'}),...td.map(t=>cl(fmt(t.quote),cw,{r:true,f:t.pax===o.pax?'e8f5ee':''}))]}),
+  ]});
+
+  // Optional items
+  const optCats=o.cats.filter(c=>c.optional&&c.items.some(i=>i.n));
+  const optSection=[];
+  if(optCats.length){
+    const optRows=[];
+    optCats.forEach(cat=>{
+      cat.items.filter(i=>i.n).forEach(it=>{
+        const n2=cat.pp?it.c*it.q*pax:it.c*it.q;
+        const q2=Math.round(n2*(1+mk/100));
+        optRows.push(new TableRow({children:[
+          cl(it.n+(cat.pp?' (x'+pax+'pax)':''),5500,{sz:18}),
+          cl(fmt(q2),1763,{r:true,sz:18,color:'856404'}),
+          cl(L==='zh'?'可选':L==='ja'?'OPT':'Optional',1763,{r:true,sz:16,color:'856404'}),
+        ]}));
+      });
+    });
+    const optLbl=L==='zh'?'可选项目（不计入报价）':L==='ja'?'オプション項目（見積外）':'OPTIONAL ITEMS (not included)';
+    optSection.push(p([tx(optLbl,{bold:true,size:20,color:'856404'})],{sp:260}));
+    optSection.push(new Table({width:{size:W,type:WidthType.DXA},columnWidths:[5500,1763,1763],rows:[
+      new TableRow({tableHeader:true,children:[
+        cl(lb.item,5500,{b:true,f:'856404',c:'FFFFFF',sz:18}),
+        cl(L==='zh'?'参考报价':L==='ja'?'参考見積':'Ref. Price',1763,{b:true,f:'856404',c:'FFFFFF',r:true,sz:16}),
+        cl('',1763,{f:'856404'}),
+      ]}),...optRows
+    ]}));
+  }
+
+  children.push(
+    new Paragraph({pageBreakBefore:true,spacing:{after:240},children:[tx(lb.summary,{bold:true,size:30,color:'1a2744'})]}),
+    p([tx(lb.breakdown,{bold:true,size:22,color:'1a2744'})],{sp:200}),
+    new Table({width:{size:W,type:WidthType.DXA},columnWidths:[4500,1426,1550,1550],rows:[
+      new TableRow({tableHeader:true,children:[cl(lb.item,4500,{b:true,f:'1a2744',c:'FFFFFF'}),cl(L==='zh'?'单价':'単価',1426,{b:true,f:'1a2744',c:'FFFFFF',r:true}),cl(lb.net+' ('+cur+')',1550,{b:true,f:'1a2744',c:'FFFFFF',r:true}),cl(lb.quote+' ('+cur+')',1550,{b:true,f:'1a2744',c:'FFFFFF',r:true})]}),...costRows
+    ]}),
+    p([tx(lb.grouptotal+' / '+lb.perpax,{bold:true,size:20,color:'1a2744'})],{sp:200}),
+    new Table({width:{size:W,type:WidthType.DXA},columnWidths:[4000,2513,2513],rows:[
+      new TableRow({children:[cl(lb.grouptotal,4000,{b:true,f:'f0efe9'}),cl(lb.net+': '+fmt(net),2513,{r:true}),cl(lb.quote+': '+fmt(q),2513,{r:true,b:true,f:'dce8f5'})]}),
+      new TableRow({children:[cl(lb.perpax,4000,{b:true,f:'f0efe9'}),cl('',2513),cl(fmt(q/pax),2513,{r:true,b:true,f:'dce8f5'})]}),
+    ]}),
+    p([tx(L==='zh'?'阶梯报价':L==='ja'?'段階見積':'TIERED PRICING',{bold:true,size:20,color:'1a2744'})],{sp:200}),
+    tierTbl,
+    ...optSection,
+  );
+
+  // ══ SECTION 3: NOTES ══
+  const notesText=(o.notes||'').trim();
+  if(notesText){
+    children.push(
+      new Paragraph({pageBreakBefore:true,spacing:{after:240},children:[tx(lb.notes,{bold:true,size:30,color:'1a2744'})]}),
+    );
+    notesText.split(String.fromCharCode(10)).forEach(line=>{
+      children.push(p([tx(line||' ',{size:20,color: line.startsWith('・')||line.startsWith('-')||line.startsWith('•')?'333333':'1a1a1a'})],{after:80}));
+    });
+  }
+
+  // ══ SECTION 4: CANCELLATION POLICY ══
+  const cancelText=(o.cancellation||getDefaultCancellation()).trim();
+  children.push(
+    new Paragraph({pageBreakBefore:false,spacing:{before:400,after:200},children:[]}),
+    new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'e0e0e0',space:1}},spacing:{after:240},children:[tx(lb.cancel,{bold:true,size:26,color:'1a2744'})]}),
+  );
+  cancelText.split(String.fromCharCode(10)).forEach(line=>{
+    if(!line.trim())return;
+    children.push(p([tx(line,{size:19,color:line.includes('%')||line.includes('days')||line.includes('天')||line.includes('日')?'333333':'555555'})],{after:80}));
+  });
+
+  // ══ SECTION 5: PAYMENT POLICY ══
+  const paymentText=(o.payment||getDefaultPayment(cur)).trim();
+  children.push(
+    new Paragraph({spacing:{before:300,after:200},children:[]}),
+    new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'e0e0e0',space:1}},spacing:{after:200},children:[tx(lb.payment,{bold:true,size:26,color:'1a2744'})]}),
+  );
+  paymentText.split(String.fromCharCode(10)).forEach(line=>{
+    if(!line.trim())return;
+    children.push(p([tx(line,{size:19,color:'555555'})],{after:80}));
+  });
+
+  // Footer
+  children.push(
+    new Paragraph({spacing:{before:400},border:{top:{style:BorderStyle.SINGLE,size:4,color:'c8a96e',space:1}},children:[tx('')]}),
+    p([tx(cfg.contact||'ALL JAPAN DMC',{sz:18,color:'444444'})],{after:60}),
+    p([tx(cfg.email||'',{sz:16,color:'888888'})]),
+    p([tx('Issued: '+new Date().toLocaleDateString(L==='zh'?'zh-CN':L==='ja'?'ja-JP':'en-GB'),{sz:16,color:'aaaaaa'})]),
+  );
+
+  const doc2=new Document({
+    styles:{default:{document:{run:{font:'Arial',size:20}}}},
+    sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1100,right:1100,bottom:1100,left:1100}}},children}]
+  });
+  dl(await Packer.toBlob(doc2),(o.clientName||'Client').replace(/\s/g,'_')+'_'+o.name+'_Proposal_AJD.docx');
+}
+
+
+// ══════════ EXPORT: EXCEL ══════════
+function expExcel(){bldXl([co()],(co().clientName||'AJD')+'_'+co().name);}
+
+function bldXl(os,fn){
+  const wb=XLSX.utils.book_new();
+  os.forEach(o=>{
+    const pax=o.pax||1;const mk=o.markup||0;const net=calcNet(o);const q=calcQ(o);
+    const rows=[[cfg.co||'ALL JAPAN DMC','','旅行費用見積書'],['Client',o.clientName,'Type',o.tourType],['Destination',o.dest,'Period',(o.startDate||'TBC')+' '+o.days+'D'],['Pax',o.pax,'Option',o.name],[],['項目','単価','数量','計算','NET','QUOTE']];
+    o.cats.filter(c=>!c.optional).forEach(cat=>{rows.push([cat.n,'','','','','']);cat.items.forEach(it=>{if(!it.n)return;const n2=cat.pp?it.c*it.q*pax:it.c*it.q;const q2=n2*(1+mk/100);rows.push(['  '+it.n,it.c,it.q,cat.pp?'×'+pax:'固定',Math.round(n2),Math.round(q2)]);});});
+    rows.push([],['合計 Total','','','',Math.round(net),Math.round(q)],['Per Pax','','','','',Math.round(q/pax)],[]);
+    // Optional items
+    const optCats=o.cats.filter(c=>c.optional&&c.items.some(i=>i.n));
+    if(optCats.length){rows.push(['OPTIONAL ITEMS (not included)','','','','','']);optCats.forEach(cat=>{cat.items.filter(i=>i.n).forEach(it=>{const n2=cat.pp?it.c*it.q*pax:it.c*it.q;const q2=n2*(1+mk/100);rows.push(['  '+it.n+' [OPT]',it.c,it.q,cat.pp?'×'+pax:'固定',Math.round(n2),Math.round(q2)]);});});}
+    const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:30},{wch:12},{wch:8},{wch:10},{wch:14},{wch:14}];
+    XLSX.utils.book_append_sheet(wb,ws,o.name.replace(/\W/g,'_').slice(0,28));
+    // Tiers sheet
+    const td=calcTierData(o);
+    const tr=[['阶梯报价 Tiered Pricing'],[],['Pax',...td.map(t=>t.pax+' pax')],['Per Pax ('+cur+')',...td.map(t=>t.perPax)],['Group Total ('+cur+')',...td.map(t=>t.quote)]];
+    const wsTier=XLSX.utils.aoa_to_sheet(tr);wsTier['!cols']=[{wch:20},...td.map(()=>({wch:14}))];
+    XLSX.utils.book_append_sheet(wb,wsTier,(o.name+'_Tiers').slice(0,31));
+    // Itin sheet
+    syncDays();const itin=o.itin.slice(0,o.days||5);
+    const ir=[['行程 Itinerary'],['Client',o.clientName,'Destination',o.dest,'Pax',o.pax],[],['Day','Date','Title','Time','Type','Content','Note']];
+    itin.forEach((d,di)=>{const named=d.slots.filter(s=>s.n);if(!named.length){ir.push(['DAY '+(di+1),d.date||'',d.title,'','','(TBD)','']);}else named.forEach((sl,si)=>ir.push([si===0?'DAY '+(di+1):'',si===0?d.date||'':'',si===0?d.title:'',sl.t||'',sl.type,sl.n,sl.note||'']));});
+    const wsIt=XLSX.utils.aoa_to_sheet(ir);wsIt['!cols']=[{wch:8},{wch:12},{wch:14},{wch:8},{wch:8},{wch:28},{wch:18}];
+    XLSX.utils.book_append_sheet(wb,(o.name+'_行程').slice(0,31),wsIt);
+  });
+  XLSX.writeFile(wb,fn.replace(/[\/\:*?"<>|]/g,'_')+'_AJD.xlsx');
+}
+
+function exportAdminExcel(){
+  if(!allQuotes.length){alert('No data');return;}
+  const wb=XLSX.utils.book_new();
+  const headers=['ID','保存时间','操作人','客户名称','旅行类型','目的地','出发日期','天数','人数','方案名','货币','净成本','报价总价','人均','Markup%','利润','状态'];
+  const rows=[headers,...allQuotes.map(r=>headers.map(h=>r[h]||''))];
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=headers.map(()=>({wch:14}));ws['!cols'][3]={wch:22};
+  XLSX.utils.book_append_sheet(wb,ws,'全员报价');
+  XLSX.writeFile(wb,'AJD_AllQuotes_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+
+// ── TRILINGUAL TOGGLE ──
+// Cycle: all (EN + ZH + JA) → en → zh → ja → all
+const LANGS = ['all','en','zh','ja'];
+const LANG_BTN = {all:'EN | 中 | 日', en:'EN', zh:'中文', ja:'日本語'};
+let lang = localStorage.getItem('ajd_lang') || 'all';
+
+function toggleLang(){
+  const i = LANGS.indexOf(lang);
+  lang = LANGS[(i+1) % LANGS.length];
+  localStorage.setItem('ajd_lang', lang);
+  applyLang();
+}
+
+function applyLang(){
+  const btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = LANG_BTN[lang] || 'EN';
+  document.documentElement.setAttribute('data-lang', lang);
+}
+
+// Returns single active language for Word/Excel export labels
+function uiLang(){ return (lang === 'all') ? 'en' : lang; }
+
+init();
+applyLang();
+</script>
+</body>
+</html>
